@@ -188,15 +188,15 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     }
 
     private String getMapsApiDirectionsUrl(Marker marker) {
-        String waypoints = "waypoints=optimize:true|"
-                + currentLocation.getLatitude() + "," + currentLocation.getLongitude()
-                + "|" + "|" + marker.getPosition().latitude + ","
-                + marker.getPosition().longitude;
-        String sensor = "sensor=false";
-        String params = waypoints + "&" + sensor;
+//        https://maps.googleapis.com/maps/api/directions/json?origin=sydney,au&destination=perth,au&waypoints=via:-37.81223%2C144.96254%7Cvia:-34.92788%2C138.60008&key=AIzaSyAfPYXZkpF_Ll5Gvz8XhoHo0aY8jx_TCFY
+        String str_origin = "origin=" + currentLocation.getLatitude() + ","
+                + currentLocation.getLongitude();
+        String str_dest = "destination=" + marker.getPosition().latitude + "," + marker.getPosition().longitude;
+        String parameters = str_origin + "&" + str_dest + "&" ;
         String output = "json";
+        String key  = "key"+"AIzaSyBH7_9bk85TYmDQMMXVXW_JpyB-Rln4wv4";
         String url = "https://maps.googleapis.com/maps/api/directions/"
-                + output + "?" + params;
+                + output + "?" + parameters+key;
         return url;
     }
 

@@ -13,6 +13,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -42,8 +43,8 @@ public class HomeActivity extends BaseActivity implements GoogleApiClient.Connec
     private Fragment fragment;
     protected GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
-    public final static int FAST_LOCATION_FREQUENCY = 100;
-    public final static int LOCATION_FREQUENCY = 2 * 100;
+    public final static int FAST_LOCATION_FREQUENCY = 1000;
+    public final static int LOCATION_FREQUENCY = 2 * 1000;
     private FusedLocationProviderClient mFusedLocationClient;
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -214,19 +215,24 @@ public class HomeActivity extends BaseActivity implements GoogleApiClient.Connec
     }
 
     @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Log.e("Map","onConnected");
-
+    public void onConnected(Bundle bundle) {
+        // do location updates
+        requestLocationUpdates();
     }
 
     @Override
     public void onConnectionSuspended(int i) {
-        Log.e("Map","onConnectionSuspended");
+        // connection to Google Play services was lost for some reason
+        Toast.makeText(HomeActivity.this, "Retrying....", Toast.LENGTH_LONG).show();
+        if (null != mGoogleApiClient) {
+            mGoogleApiClient.connect(); // attempt to establish a new connection
+        }
     }
 
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.e("Map","onConnectionFailed");
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Toast.makeText(HomeActivity.this, "Check your gps signal or click and try again", Toast.LENGTH_LONG).show();
+        finish();
     }
 
     @Override
