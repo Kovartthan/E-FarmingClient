@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/navigation_map"
+        android:icon="@drawable/ic_map_black_24dp"
+        android:title="@string/maps" />
+
+    <item
+        android:title="@string/products"
+        android:id="@+id/navigation_products"
+        android:icon="@drawable/ic_assignment_black_24dp" />
+
+
+    <item
+        android:title="@string/profile"
+        android:id="@+id/navigation_profile"
+        android:icon="@drawable/ic_assignment_ind_black_24dp" />
+
+</menu>
