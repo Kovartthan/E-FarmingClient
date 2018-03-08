@@ -38,14 +38,17 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
+import com.google.maps.android.PolyUtil;
 import com.google.maps.android.clustering.ClusterManager;
 import com.ko.efarmingclient.EFApp;
 import com.ko.efarmingclient.R;
@@ -55,16 +58,21 @@ import com.ko.efarmingclient.home.navigationcomponents.PathJSONParser;
 import com.ko.efarmingclient.listener.OnNavigationListener;
 import com.ko.efarmingclient.model.ClusterCompanyInfoMarker;
 import com.ko.efarmingclient.model.CompanyInfoPublic;
+import com.ko.efarmingclient.model.NearByFinderModel;
 import com.ko.efarmingclient.util.Constants;
+import com.ko.efarmingclient.util.GpsUtils;
 
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
 import static com.ko.efarmingclient.EFApp.getApp;
 import static com.ko.efarmingclient.util.Constants.REQUEST_CHECK_SETTINGS;
+import static com.ko.efarmingclient.util.Constants.WRONG_WAY_DISTANCE;
 
 public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickListener, OnNavigationListener, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -77,11 +85,20 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     private Location currentLocation = null;
     protected GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
-    public final static int FAST_LOCATION_FREQUENCY = 1000;
-    public final static int LOCATION_FREQUENCY = 2 * 1000;
+    public final static int FAST_LOCATION_FREQUENCY = 800;
+    public final static int LOCATION_FREQUENCY = 2 * 800;
     private FusedLocationProviderClient mFusedLocationClient;
     private double latitude, longitude;
     private Polyline polylineFinal;
+    private ArrayList<LatLng> points; //added
+    private Polyline line; //added
+    private Marker currentNavigationMarker;
+    private boolean isNavigationStart = false;
+    private static final float SMALLEST_DISPLACEMENT = 0.25F;
+    private ArrayList<LatLng> navigationTrackList;
+    private PolylineOptions options;
+    private double destinationLatitude, destinationLongitude;
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -116,13 +133,14 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     private void init(View view) {
         companyInfoPublicArrayList = new ArrayList<>();
         buildGoogleApiClient();
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 startLocationUpdates(getActivity());
             }
         }, 200);
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
+        points = new ArrayList<LatLng>();
     }
 
     private void setupDefault() {
@@ -222,11 +240,16 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     }
 
     private void removePreviousPolyline() {
-        if(polylineFinal != null)
+        if (polylineFinal != null)
             polylineFinal.remove();
+        if (line != null) {
+            line.remove();
+        }
     }
 
     private String getMapsApiDirectionsUrl(Marker marker) {
+        destinationLatitude = 0.0;
+        destinationLatitude = 0.0;
         String str_origin = "origin=" + currentLocation.getLatitude() + ","
                 + currentLocation.getLongitude();
         String str_dest = "destination=" + marker.getPosition().latitude + "," + marker.getPosition().longitude;
@@ -235,6 +258,8 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
         String key = "key" + "AIzaSyBH7_9bk85TYmDQMMXVXW_JpyB-Rln4wv4";
         String url = "https://maps.googleapis.com/maps/api/directions/"
                 + output + "?" + parameters + key;
+        destinationLatitude = marker.getPosition().latitude;
+        destinationLongitude = marker.getPosition().longitude;
         return url;
     }
 
@@ -289,6 +314,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
             // traversing through routes
             for (int i = 0; i < routes.size(); i++) {
                 points = new ArrayList<LatLng>();
+                navigationTrackList = new ArrayList<>();
                 polyLineOptions = new PolylineOptions();
                 List<HashMap<String, String>> path = routes.get(i);
 
@@ -298,16 +324,17 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
                     double lat = Double.parseDouble(point.get("lat"));
                     double lng = Double.parseDouble(point.get("lng"));
                     LatLng position = new LatLng(lat, lng);
-
                     points.add(position);
                 }
-
+                navigationTrackList.addAll(points);
                 polyLineOptions.addAll(points);
                 polyLineOptions.width(10);
                 polyLineOptions.color(Color.BLUE);
             }
 
             polylineFinal = googleMap.addPolyline(polyLineOptions);
+
+            isNavigationStart = true;
 
         }
     }
@@ -341,6 +368,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     }
 
     private void getLastKnownLocation() {
+
         if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(),
                 Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -371,6 +399,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
         mLocationRequest = new LocationRequest()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval(LOCATION_FREQUENCY)
+                .setSmallestDisplacement(SMALLEST_DISPLACEMENT)
                 .setFastestInterval(FAST_LOCATION_FREQUENCY);
     }
 
@@ -471,16 +500,161 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     @Override
     public void onLocationChanged(Location location) {
         Log.e("Map", "onLocationChanged");
+        if (currentNavigationMarker != null) {
+            currentNavigationMarker.remove();
+        }
         if (location != null) {
             setCurrentLocation(location);
+            double latitude = location.getLatitude();
+            double longitude = location.getLongitude();
+            LatLng latLng = new LatLng(latitude, longitude);
+            if (isNavigationStart) {
+                points.add(latLng);
+                if(PolyUtil.isLocationOnEdge(latLng,polylineFinal.getPoints(),false,10)){
+                    redrawLineCorrectPath(latLng);
+                }else{
+
+                }
+                checkNavigationIsReachedDestination(latLng);
+            }
         }
     }
 
+
+
+    private synchronized void redrawLineCorrectPath(LatLng latLng) {
+
+        options = new PolylineOptions().width(12).color(Color.GREEN).geodesic(true);
+
+        for (int i = 0; i < points.size(); i++) {
+            LatLng point = points.get(i);
+            options.add(point);
+        }
+
+        addMarkerForNavigation(latLng);
+        line = googleMap.addPolyline(options);
+
+//        if (checkRacerRoutePath != null) {
+//            checkRacerRoutePath.cancel(true);
+//            checkRacerRoutePath = null;
+//        }
+//
+//        checkRacerRoutePath = new CheckNavigationRoutePath(latLng);
+//        checkRacerRoutePath.execute();
+
+    }
+
+    private void addMarkerForNavigation(LatLng latLng) {
+
+        currentNavigationMarker = googleMap.addMarker(new MarkerOptions().position(latLng).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_navigation_blue_600_24dp)));
+        googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        googleMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+
+    }
+
     private void moveMap(double latitude, double longitude) {
+
         googleMap.clear();
         LatLng latLng = new LatLng(latitude, longitude);
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         googleMap.animateCamera(CameraUpdateFactory.zoomTo(11));
         googleMap.getUiSettings().setZoomControlsEnabled(true);
+
     }
+
+    private synchronized void checkNavigationIsReachedDestination(LatLng latLng) {
+        if (destinationLatitude == latLng.latitude && destinationLongitude == latLng.longitude) {
+            isNavigationStart = false;
+            currentNavigationMarker.remove();
+            line.remove();
+            polylineFinal.remove();
+        }
+    }
+
+
+//    private CheckNavigationRoutePath checkRacerRoutePath;
+//    class CheckNavigationRoutePath extends AsyncTask<Void, Void, ArrayList<NearByFinderModel>> {
+//
+//        boolean isInNavigationTrack = false;
+//        LatLng target;
+//        ArrayList<NearByFinderModel> navigationTrackingList = new ArrayList<>();
+//        LatLng latLng;
+//
+//        public CheckNavigationRoutePath(LatLng latLng) {
+//            this.latLng = latLng;
+//        }
+//
+//        @Override
+//        protected ArrayList<NearByFinderModel> doInBackground(Void... voids) {
+//            getActivity().runOnUiThread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    navigationTrackingList = getNavigationTrackingList();
+//                }
+//            });
+//            return navigationTrackingList;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(ArrayList<NearByFinderModel> distance) {
+//            super.onPostExecute(distance);
+//            target = new LatLng(currentNavigationMarker.getPosition().latitude, currentNavigationMarker.getPosition().longitude);
+//            if (navigationTrackingList.size() > 0 && navigationTrackingList.get(navigationTrackingList.size() -1).distance > WRONG_WAY_DISTANCE) {
+//                isInNavigationTrack = false;
+//                Log.e("Navigation","Going in the wrong direction");
+////                options = new PolylineOptions().width(10).color(Color.YELLOW).geodesic(true);
+////                for (int i = 0; i < points.size(); i++) {
+////                    LatLng point = points.get(i);
+////                    options.add(point);
+////                }
+////                addMarkerForNavigation(latLng);
+////                line = googleMap.addPolyline(options);
+//            } else {
+//                isInNavigationTrack = true;
+//                Log.e("Navigation","Going in the right direction");
+////                options = new PolylineOptions().width(10).color(Color.GREEN).geodesic(true);
+////                for (int i = 0; i < points.size(); i++) {
+////                    LatLng point = points.get(i);
+////                    options.add(point);
+////                }
+////                addMarkerForNavigation(latLng);
+////                line = googleMap.addPolyline(options);
+//            }
+//        }
+//    }
+//
+//    public ArrayList<NearByFinderModel> getNavigationTrackingList() {
+//
+//        ArrayList<NearByFinderModel> distance = new ArrayList<>();
+//
+//        if (polylineFinal == null) {
+//            return distance;
+//        }
+//
+//        if (navigationTrackList != null && navigationTrackList.size() > 0) {
+//
+//            for (LatLng latLng : navigationTrackList) {
+//                Double dis = GpsUtils.distance(currentNavigationMarker.getPosition().latitude, currentNavigationMarker.getPosition().longitude, latLng.latitude, latLng.longitude) * 1000;
+//                distance.add(new NearByFinderModel(dis, latLng));
+//            }
+//
+//        }
+//        if (distance.size() > 0) {
+//
+//            Collections.sort(distance, new Comparator<NearByFinderModel>() {
+//                @Override
+//                public int compare(NearByFinderModel c1, NearByFinderModel c2) {
+//                    return Double.compare(c1.distance, c2.distance);
+//                }
+//            });
+//
+//            Log.e("Navigation", "Lowest Distance" + distance.get(0).distance);
+//        }
+//
+//        return distance;
+//
+//    }
+
+
+
 }

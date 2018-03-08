@@ -24,9 +24,10 @@ public interface Constants {
     String GET_ADDRESS = "get_address";
     String GET_LATITUDE = "get_latitude";
     String GET_LONGITUDE = "get_longitude";
-    String  LOCATION_FETCH_FAILED = "location_fetch_failed";
+    String LOCATION_FETCH_FAILED = "location_fetch_failed";
     String SEND_RECT = "send_rect";
     public static String PRODUCT_INFO = "product_info";
-    public  int REFRESH_PRODUCT = 1100;
+    public int REFRESH_PRODUCT = 1100;
     String EDIT_PRODUCT = "edit_product";
+    int WRONG_WAY_DISTANCE = 100;
 }
