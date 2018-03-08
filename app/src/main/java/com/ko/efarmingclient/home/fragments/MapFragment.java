@@ -3,6 +3,7 @@ package com.ko.efarmingclient.home.fragments;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -11,15 +12,13 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -32,18 +31,21 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
-import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.ko.efarmingclient.EFApp;
 import com.ko.efarmingclient.R;
@@ -54,7 +56,6 @@ import com.ko.efarmingclient.listener.OnNavigationListener;
 import com.ko.efarmingclient.model.ClusterCompanyInfoMarker;
 import com.ko.efarmingclient.model.CompanyInfoPublic;
 import com.ko.efarmingclient.util.Constants;
-import com.ko.efarmingclient.util.TextUtils;
 
 import org.json.JSONObject;
 
@@ -62,25 +63,50 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-
-
 import static com.ko.efarmingclient.EFApp.getApp;
 import static com.ko.efarmingclient.util.Constants.REQUEST_CHECK_SETTINGS;
 
-public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickListener,OnNavigationListener {
-    private MapView mMapView;
+public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickListener, OnNavigationListener, GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        LocationListener {
+    private MapView googleMapView;
     private GoogleMap googleMap;
     private ArrayList<CompanyInfoPublic> companyInfoPublicArrayList;
     private ClusterManager<ClusterCompanyInfoMarker> mClusterManager;
     private MarkerInfoViewAdapter markerInfoViewAdapter;
     private Location currentLocation = null;
+    protected GoogleApiClient mGoogleApiClient;
+    private LocationRequest mLocationRequest;
+    public final static int FAST_LOCATION_FREQUENCY = 1000;
+    public final static int LOCATION_FREQUENCY = 2 * 1000;
+    private FusedLocationProviderClient mFusedLocationClient;
+    private double latitude, longitude;
+    private Polyline polylineFinal;
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        final LocationSettingsStates states = LocationSettingsStates.fromIntent(data);
+        switch (requestCode) {
+            case REQUEST_CHECK_SETTINGS:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        startLocationUpdates(getActivity());
+                        break;
+                    default:
+                        break;
+                }
+                break;
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_map, container, false);
-        mMapView = view.findViewById(R.id.mapView);
-        mMapView.onCreate(savedInstanceState);
+        googleMapView = view.findViewById(R.id.mapView);
+        googleMapView.onCreate(savedInstanceState);
         init(view);
         setupDefault();
         setupEvents();
@@ -89,7 +115,14 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
 
     private void init(View view) {
         companyInfoPublicArrayList = new ArrayList<>();
-
+        buildGoogleApiClient();
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                startLocationUpdates(getActivity());
+            }
+        }, 200);
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
     }
 
     private void setupDefault() {
@@ -97,7 +130,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     }
 
     private void setupGoogleMap() {
-        mMapView.onResume();
+        googleMapView.onResume();
         try {
             MapsInitializer.initialize(getActivity().getApplicationContext());
         } catch (Exception e) {
@@ -107,17 +140,17 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
 
 
     private void setupEvents() {
-        mMapView.getMapAsync(new OnMapReadyCallback() {
+        googleMapView.getMapAsync(new OnMapReadyCallback() {
             @Override
-            public void onMapReady(GoogleMap mMap) {
-                googleMap = mMap;
+            public void onMapReady(GoogleMap googleMap) {
+                MapFragment.this.googleMap = googleMap;
                 if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                     return;
                 }
-                googleMap.setMyLocationEnabled(true);
+                MapFragment.this.googleMap.setMyLocationEnabled(true);
                 mClusterManager = new ClusterManager<>(getActivity(), googleMap);
-                googleMap.setOnCameraIdleListener(mClusterManager);
-                googleMap.setOnMarkerClickListener(mClusterManager);
+                MapFragment.this.googleMap.setOnCameraIdleListener(mClusterManager);
+                MapFragment.this.googleMap.setOnMarkerClickListener(mClusterManager);
                 populateCompanyLocationOnMap();
                 setupInfoWindowAdapterToMarker();
             }
@@ -169,7 +202,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     @Override
     public void onLowMemory() {
         super.onLowMemory();
-        mMapView.onLowMemory();
+        googleMapView.onLowMemory();
     }
 
     @Override
@@ -180,23 +213,28 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
 
     @Override
     public void onNavigationStart(Marker marker) {
-        if(marker != null & currentLocation != null) {
+        if (marker != null & currentLocation != null) {
             String url = getMapsApiDirectionsUrl(marker);
+            removePreviousPolyline();
             ReadTask downloadTask = new ReadTask();
             downloadTask.execute(url);
         }
     }
 
+    private void removePreviousPolyline() {
+        if(polylineFinal != null)
+            polylineFinal.remove();
+    }
+
     private String getMapsApiDirectionsUrl(Marker marker) {
-//        https://maps.googleapis.com/maps/api/directions/json?origin=sydney,au&destination=perth,au&waypoints=via:-37.81223%2C144.96254%7Cvia:-34.92788%2C138.60008&key=AIzaSyAfPYXZkpF_Ll5Gvz8XhoHo0aY8jx_TCFY
         String str_origin = "origin=" + currentLocation.getLatitude() + ","
                 + currentLocation.getLongitude();
         String str_dest = "destination=" + marker.getPosition().latitude + "," + marker.getPosition().longitude;
-        String parameters = str_origin + "&" + str_dest + "&" ;
+        String parameters = str_origin + "&" + str_dest + "&";
         String output = "json";
-        String key  = "key"+"AIzaSyBH7_9bk85TYmDQMMXVXW_JpyB-Rln4wv4";
+        String key = "key" + "AIzaSyBH7_9bk85TYmDQMMXVXW_JpyB-Rln4wv4";
         String url = "https://maps.googleapis.com/maps/api/directions/"
-                + output + "?" + parameters+key;
+                + output + "?" + parameters + key;
         return url;
     }
 
@@ -248,7 +286,6 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
         protected void onPostExecute(List<List<HashMap<String, String>>> routes) {
             ArrayList<LatLng> points = null;
             PolylineOptions polyLineOptions = null;
-
             // traversing through routes
             for (int i = 0; i < routes.size(); i++) {
                 points = new ArrayList<LatLng>();
@@ -266,13 +303,184 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
                 }
 
                 polyLineOptions.addAll(points);
-                polyLineOptions.width(2);
+                polyLineOptions.width(10);
                 polyLineOptions.color(Color.BLUE);
             }
 
-            googleMap.addPolyline(polyLineOptions);
+            polylineFinal = googleMap.addPolyline(polyLineOptions);
+
         }
     }
 
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        stopLocationUpdates();
+    }
+
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        stopLocationUpdates();
+    }
+
+
+    private synchronized void buildGoogleApiClient() {
+        // setup googleapi client
+        mGoogleApiClient = new GoogleApiClient.Builder(EFApp.getContext())
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+
+        mGoogleApiClient.connect();
+        // setup location updates
+        configRequestLocationUpdate();
+    }
+
+    private void getLastKnownLocation() {
+        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(),
+                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        mFusedLocationClient.getLastLocation()
+                .addOnSuccessListener(getActivity(), new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        // Got last known location. In some rare situations this can be null.
+                        if (location != null) {
+                            setCurrentLocation(location);
+                            latitude = location.getLatitude();
+                            longitude = location.getLongitude();
+                            moveMap(latitude, longitude);
+                        } else {
+
+                        }
+                    }
+                });
+    }
+
+
+    /**
+     * config request location update
+     */
+    private void configRequestLocationUpdate() {
+        mLocationRequest = new LocationRequest()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(LOCATION_FREQUENCY)
+                .setFastestInterval(FAST_LOCATION_FREQUENCY);
+    }
+
+
+    /**
+     * request location updates
+     */
+    @SuppressLint("MissingPermission")
+    private void requestLocationUpdates() {
+        LocationServices.FusedLocationApi.requestLocationUpdates(
+                mGoogleApiClient,
+                mLocationRequest,
+                this
+        );
+
+
+    }
+
+    /**
+     * start location updates
+     */
+    public void startLocationUpdates(final Activity activity) {
+        // connect and force the updates
+        mGoogleApiClient.connect();
+        if (mGoogleApiClient.isConnected()) {
+            requestLocationUpdates();
+            LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                    .addLocationRequest(new LocationRequest().setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY));
+
+            PendingResult<LocationSettingsResult> result =
+                    LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient, builder.build());
+
+            result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+                @Override
+                public void onResult(@NonNull LocationSettingsResult locationSettingsResult) {
+
+                    final Status status = locationSettingsResult.getStatus();
+
+                    Log.e("Fused", "onResult() called with: " + "result = [" + status.getStatusMessage() + "]");
+                    switch (status.getStatusCode()) {
+                        case LocationSettingsStatusCodes.SUCCESS:
+
+                        case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                            try {
+                                status.startResolutionForResult(activity, REQUEST_CHECK_SETTINGS);
+                            } catch (IntentSender.SendIntentException e) {
+                                Log.d("Fused", "", e);
+                                // Ignore the error.
+                            }
+
+                            break;
+                        case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+
+                            break;
+                    }
+
+                }
+            });
+        } else {
+            mGoogleApiClient.connect();
+        }
+
+    }
+
+    /**
+     * removes location updates from the FusedLocationApi
+     */
+    public void stopLocationUpdates() {
+        // stop updates, disconnect from google api
+        if (null != mGoogleApiClient && mGoogleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+            mGoogleApiClient.disconnect();
+        }
+
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        // do location updates
+        requestLocationUpdates();
+        getLastKnownLocation();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        // connection to Google Play services was lost for some reason
+        Toast.makeText(getActivity(), "Retrying....", Toast.LENGTH_LONG).show();
+        if (null != mGoogleApiClient) {
+            mGoogleApiClient.connect(); // attempt to establish a new connection
+        }
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Toast.makeText(getActivity(), "Check your gps signal or click and try again", Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        Log.e("Map", "onLocationChanged");
+        if (location != null) {
+            setCurrentLocation(location);
+        }
+    }
+
+    private void moveMap(double latitude, double longitude) {
+        googleMap.clear();
+        LatLng latLng = new LatLng(latitude, longitude);
+        googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        googleMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+        googleMap.getUiSettings().setZoomControlsEnabled(true);
+    }
 }

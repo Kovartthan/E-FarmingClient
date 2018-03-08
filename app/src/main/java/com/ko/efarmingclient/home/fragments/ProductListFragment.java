@@ -21,8 +21,6 @@ import com.ko.efarmingclient.util.Constants;
 
 import java.util.ArrayList;
 
-import static com.ko.efarmingclient.EFApp.getApp;
-
 
 public class ProductListFragment extends Fragment {
     private RecyclerView recyclerView;
