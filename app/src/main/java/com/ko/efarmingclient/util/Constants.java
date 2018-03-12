@@ -30,4 +30,9 @@ public interface Constants {
     public int REFRESH_PRODUCT = 1100;
     String EDIT_PRODUCT = "edit_product";
     int WRONG_WAY_DISTANCE = 100;
+    public String CHAT_ROOMS ="chat_rooms";
+    public static final String ARG_RECEIVER = "receiver";
+    public static final String ARG_RECEIVER_UID = "receiver_uid";
+    public static final String ARG_CHAT_ROOMS = "chat_rooms";
+    public static final String ARG_FIREBASE_TOKEN = "firebaseToken";
 }

@@ -91,12 +91,12 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     private double latitude, longitude;
     private Polyline polylineFinal;
     private ArrayList<LatLng> points; //added
-    private Polyline line; //added
+    private Polyline line, wrongLine; //added
     private Marker currentNavigationMarker;
     private boolean isNavigationStart = false;
     private static final float SMALLEST_DISPLACEMENT = 0.25F;
     private ArrayList<LatLng> navigationTrackList;
-    private PolylineOptions options;
+    private PolylineOptions options, wrongPolylineOptions;
     private double destinationLatitude, destinationLongitude;
 
     @Override
@@ -510,19 +510,36 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
             LatLng latLng = new LatLng(latitude, longitude);
             if (isNavigationStart) {
                 points.add(latLng);
-                if(PolyUtil.isLocationOnEdge(latLng,polylineFinal.getPoints(),false,10)){
+                if (PolyUtil.isLocationOnEdge(latLng, polylineFinal.getPoints(), true, 10)) {
                     redrawLineCorrectPath(latLng);
-                }else{
-
+                } else {
+                    redrawWrongPath(latLng);
                 }
                 checkNavigationIsReachedDestination(latLng);
             }
         }
     }
 
+    private synchronized void redrawWrongPath(LatLng latLng) {
+        wrongPolylineOptions = new PolylineOptions().width(12).color(Color.GREEN).geodesic(true);
+
+        for (int i = 0; i < points.size(); i++) {
+            LatLng point = points.get(i);
+            wrongPolylineOptions.add(point);
+        }
+
+        addMarkerForNavigation(latLng);
+        wrongLine = googleMap.addPolyline(wrongPolylineOptions);
+
+    }
 
 
     private synchronized void redrawLineCorrectPath(LatLng latLng) {
+
+        if (wrongLine != null) {
+            wrongLine.remove();
+            wrongLine = null;
+        }
 
         options = new PolylineOptions().width(12).color(Color.GREEN).geodesic(true);
 
@@ -546,7 +563,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
 
     private void addMarkerForNavigation(LatLng latLng) {
 
-        currentNavigationMarker = googleMap.addMarker(new MarkerOptions().position(latLng).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_navigation_blue_600_24dp)));
+//        currentNavigationMarker = googleMap.addMarker(new MarkerOptions().position(latLng).icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_navigation_blue_600_24dp)));
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         googleMap.animateCamera(CameraUpdateFactory.zoomTo(15));
 
@@ -563,11 +580,29 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     }
 
     private synchronized void checkNavigationIsReachedDestination(LatLng latLng) {
+        double tempDestinationLatitude = destinationLatitude;
+        double tempDestinationLongitude = destinationLongitude;
+//        if (((latLng.latitude > tempDestinationLatitude) && (latLng.latitude < tempDestinationLatitude + 0.002))
+//                && ((latLng.longitude > tempDestinationLongitude) && (latLng.longitude < tempDestinationLongitude + 0.002))) {
+//            Toast.makeText(getActivity(), "Desit plus  reached", Toast.LENGTH_LONG).show();
+//            isNavigationStart = false;
+//            line.remove();
+//            polylineFinal.remove();
+//            wrongLine.remove();
+//        }else  if (((latLng.latitude > tempDestinationLatitude) && (latLng.latitude < tempDestinationLatitude - 0.002))
+//                && ((latLng.longitude > tempDestinationLongitude) && (latLng.longitude < tempDestinationLongitude - 0.002))) {
+//            Toast.makeText(getActivity(), "Desit minus   reached", Toast.LENGTH_LONG).show();
+//            isNavigationStart = false;
+//            line.remove();
+//            polylineFinal.remove();
+//            wrongLine.remove();
+//        }
+
         if (destinationLatitude == latLng.latitude && destinationLongitude == latLng.longitude) {
             isNavigationStart = false;
-            currentNavigationMarker.remove();
             line.remove();
             polylineFinal.remove();
+            wrongLine.remove();
         }
     }
 
@@ -654,7 +689,6 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
 //        return distance;
 //
 //    }
-
 
 
 }

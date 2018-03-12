@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.ko.efarmingclient">
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -57,7 +58,7 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".home.HomeActivity"
+            android:name=".home.activities.HomeActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppThemeHome" />
         <activity
@@ -73,6 +74,7 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
 
+        <activity android:name=".home.activities.ChatActivity"></activity>
     </application>
 
 </manifest>

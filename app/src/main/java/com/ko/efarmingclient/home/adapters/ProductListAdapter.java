@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.ko.efarmingclient.R;
+import com.ko.efarmingclient.listener.OnChatOpenListener;
 import com.ko.efarmingclient.model.ProductInfo;
 import com.ko.efarmingclient.util.TextUtils;
 import com.squareup.picasso.Picasso;
@@ -19,6 +20,11 @@ import java.util.ArrayList;
 public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private Context context;
     private ArrayList<ProductInfo> productInfoArrayList;
+    private OnChatOpenListener onChatOpenListener;
+
+    public void  setOnChatOpenListener(OnChatOpenListener onChatOpenListener){
+        this.onChatOpenListener = onChatOpenListener;
+    }
 
     public ProductListAdapter(Context context, ArrayList<ProductInfo> productInfoArrayList) {
         this.context = context;
@@ -34,12 +40,18 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         final ProductInfo productInfo = productInfoArrayList.get(position);
-        if(!TextUtils.isEmpty(productInfo.imageUrl)) {
+        if (!TextUtils.isEmpty(productInfo.imageUrl)) {
             Picasso.with(context).load(productInfo.imageUrl).into(((ProductItemHolder) holder).imgProduct);
         }
         ((ProductItemHolder) holder).txtProductName.setText(TextUtils.capitalizeFirstLetter(productInfo.productName));
         ((ProductItemHolder) holder).txtProductPrice.setText("Rs " + productInfo.productPrice);
         ((ProductItemHolder) holder).txtProductQuantity.setText("Available units : " + productInfo.productQuantity);
+        ((ProductItemHolder) holder).txtRequestProduct.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onChatOpenListener.openChat(productInfo);
+            }
+        });
     }
 
     @Override
@@ -68,6 +80,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             txtProductPrice = itemView.findViewById(R.id.txt_product_price);
             txtProductQuantity = itemView.findViewById(R.id.txt_product_quantity);
             txtRequestProduct = itemView.findViewById(R.id.txt_req_chat);
+
         }
 
     }

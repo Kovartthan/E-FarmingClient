@@ -1,5 +1,6 @@
 package com.ko.efarmingclient.home.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -15,14 +16,16 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.ko.efarmingclient.R;
+import com.ko.efarmingclient.home.activities.ChatActivity;
 import com.ko.efarmingclient.home.adapters.ProductListAdapter;
+import com.ko.efarmingclient.listener.OnChatOpenListener;
 import com.ko.efarmingclient.model.ProductInfo;
 import com.ko.efarmingclient.util.Constants;
 
 import java.util.ArrayList;
 
 
-public class ProductListFragment extends Fragment {
+public class ProductListFragment extends Fragment implements OnChatOpenListener {
     private RecyclerView recyclerView;
     private ArrayList<ProductInfo> productInfoArrayList;
     private ProductListAdapter productListAdapter;
@@ -47,6 +50,7 @@ public class ProductListFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         productInfoArrayList = new ArrayList<>();
         productListAdapter = new ProductListAdapter(getActivity(), productInfoArrayList);
+        productListAdapter.setOnChatOpenListener(this);
         recyclerView.setAdapter(productListAdapter);
     }
 
@@ -85,4 +89,8 @@ public class ProductListFragment extends Fragment {
 
     }
 
+    @Override
+    public void openChat(ProductInfo productInfo) {
+        startActivity(new Intent(getActivity(), ChatActivity.class).putExtra("Product_id",productInfo));
+    }
 }

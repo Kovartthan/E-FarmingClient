@@ -1,9 +1,16 @@
 package com.ko.efarmingclient.login;
 
+import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.text.Editable;
 import android.text.Spannable;
@@ -24,11 +31,17 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
-import com.ko.efarmingclient.home.HomeActivity;
+import com.ko.efarmingclient.home.activities.HomeActivity;
 import com.ko.efarmingclient.R;
 import com.ko.efarmingclient.base.BaseActivity;
+import com.ko.efarmingclient.util.AlertUtils;
 import com.ko.efarmingclient.util.DeviceUtils;
+import com.ko.efarmingclient.util.MarshMallowPermissionUtils;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.ko.efarmingclient.util.Constants.RC_MARSH_MALLOW_LOCATION_PERMISSION;
 import static com.ko.efarmingclient.util.DeviceUtils.hideSoftKeyboard;
 import static com.ko.efarmingclient.util.TextUtils.isValidEmail;
 
@@ -65,10 +78,39 @@ public class LoginActivity extends BaseActivity {
         txtSignUp = findViewById(R.id.txt_sign_up);
         emailLayout = findViewById(R.id.email_layout);
         passwordLayout = findViewById(R.id.password_layout);
+        MarshMallowPermissionUtils.checkLocationPermission(LoginActivity.this);
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            
+            case RC_MARSH_MALLOW_LOCATION_PERMISSION:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                } else if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_DENIED) {
+                    AlertUtils.showAlert(this, getResources().getString(R.string.location_permission_required), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            MarshMallowPermissionUtils.checkLocationPermission(LoginActivity.this);
+                        }
+                    }, false);
+                }
+                break;
+        }
     }
 
     private void setupDefault() {
         setupSpannableForSignUp();
+        getEmailFromLogout();
+    }
+
+    private void getEmailFromLogout() {
+        if(getIntent() != null && getIntent().hasExtra("email")){
+            mEmailView.setText(getIntent().getStringExtra("email"));
+        }
     }
 
     private void setupSpannableForSignUp() {
