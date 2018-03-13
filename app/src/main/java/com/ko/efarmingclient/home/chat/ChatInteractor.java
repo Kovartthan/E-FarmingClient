@@ -137,72 +137,100 @@ public class ChatInteractor implements ChatContract.Interactor {
         final DatabaseReference databaseReference = FirebaseDatabase.getInstance()
                 .getReference().child(Constants.PRODUCT_INFO).child(key).child("all_chats").child(getApp().getFireBaseAuth().getCurrentUser().getUid());
 
-        databaseReference.child(Constants.CHAT_ROOMS).getRef().addListenerForSingleValueEvent(new ValueEventListener() {
+//        databaseReference.child(Constants.CHAT_ROOMS).getRef().addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                if (dataSnapshot.hasChild(room_type_1)) {
+//                    Log.e(TAG, "getMessageFromFirebaseUser: " + room_type_1 + " exists");
+//                    databaseReference.child(Constants.CHAT_ROOMS).child(room_type_1).addChildEventListener(new ChildEventListener() {
+//                        @Override
+//                        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+//                            Chat chat = dataSnapshot.getValue(Chat.class);
+//                            mOnGetMessagesListener.onGetMessagesSuccess(chat);
+//                        }
+//
+//                        @Override
+//                        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+//
+//                        }
+//
+//                        @Override
+//                        public void onChildRemoved(DataSnapshot dataSnapshot) {
+//
+//                        }
+//
+//                        @Override
+//                        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+//
+//                        }
+//
+//                        @Override
+//                        public void onCancelled(DatabaseError databaseError) {
+//                            mOnGetMessagesListener.onGetMessagesFailure("Unable to get message: " + databaseError.getMessage());
+//                        }
+//                    });
+//
+//
+//                } else if (dataSnapshot.hasChild(room_type_2)) {
+//                    Log.e(TAG, "getMessageFromFirebaseUser: " + room_type_2 + " exists");
+//                    databaseReference.child(Constants.CHAT_ROOMS).child(room_type_2).addChildEventListener(new ChildEventListener() {
+//                        @Override
+//                        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+//                            Chat chat = dataSnapshot.getValue(Chat.class);
+//                            mOnGetMessagesListener.onGetMessagesSuccess(chat);
+//                        }
+//
+//                        @Override
+//                        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+//
+//                        }
+//
+//                        @Override
+//                        public void onChildRemoved(DataSnapshot dataSnapshot) {
+//
+//                        }
+//
+//                        @Override
+//                        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+//
+//                        }
+//
+//                        @Override
+//                        public void onCancelled(DatabaseError databaseError) {
+//                            mOnGetMessagesListener.onGetMessagesFailure("Unable to get message: " + databaseError.getMessage());
+//                        }
+//                    });
+//                } else {
+//                    Log.e(TAG, "getMessageFromFirebaseUser: no such room available");
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//                mOnGetMessagesListener.onGetMessagesFailure("Unable to get message: " + databaseError.getMessage());
+//            }
+//        });
+
+        databaseReference.child(Constants.CHAT_ROOMS).child(room_type_1).addChildEventListener(new ChildEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                if (dataSnapshot.hasChild(room_type_1)) {
-                    Log.e(TAG, "getMessageFromFirebaseUser: " + room_type_1 + " exists");
-                    databaseReference.child(Constants.CHAT_ROOMS).child(room_type_1).addChildEventListener(new ChildEventListener() {
-                        @Override
-                        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                            Chat chat = dataSnapshot.getValue(Chat.class);
-                            mOnGetMessagesListener.onGetMessagesSuccess(chat);
-                        }
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                Chat chat = dataSnapshot.getValue(Chat.class);
+                mOnGetMessagesListener.onGetMessagesSuccess(chat);
+            }
 
-                        @Override
-                        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
 
-                        }
+            }
 
-                        @Override
-                        public void onChildRemoved(DataSnapshot dataSnapshot) {
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
 
-                        }
+            }
 
-                        @Override
-                        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
 
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-                            mOnGetMessagesListener.onGetMessagesFailure("Unable to get message: " + databaseError.getMessage());
-                        }
-                    });
-
-
-                } else if (dataSnapshot.hasChild(room_type_2)) {
-                    Log.e(TAG, "getMessageFromFirebaseUser: " + room_type_2 + " exists");
-                    databaseReference.child(Constants.CHAT_ROOMS).child(room_type_2).addChildEventListener(new ChildEventListener() {
-                        @Override
-                        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                            Chat chat = dataSnapshot.getValue(Chat.class);
-                            mOnGetMessagesListener.onGetMessagesSuccess(chat);
-                        }
-
-                        @Override
-                        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-                        }
-
-                        @Override
-                        public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-                        }
-
-                        @Override
-                        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-                            mOnGetMessagesListener.onGetMessagesFailure("Unable to get message: " + databaseError.getMessage());
-                        }
-                    });
-                } else {
-                    Log.e(TAG, "getMessageFromFirebaseUser: no such room available");
-                }
             }
 
             @Override
@@ -210,6 +238,35 @@ public class ChatInteractor implements ChatContract.Interactor {
                 mOnGetMessagesListener.onGetMessagesFailure("Unable to get message: " + databaseError.getMessage());
             }
         });
+
+        databaseReference.child(Constants.CHAT_ROOMS).child(room_type_2).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                Chat chat = dataSnapshot.getValue(Chat.class);
+                mOnGetMessagesListener.onGetMessagesSuccess(chat);
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                mOnGetMessagesListener.onGetMessagesFailure("Unable to get message: " + databaseError.getMessage());
+            }
+        });
+
     }
 
 

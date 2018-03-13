@@ -162,7 +162,6 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
         }
         mChatRecyclerAdapter.add(chat);
         mRecyclerViewChat.smoothScrollToPosition(mChatRecyclerAdapter.getItemCount() - 1);
-        mChatRecyclerAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -189,9 +188,10 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
                         receiverUid = productInfo.user_info.uid;
                         receiver = productInfo.user_info.email;
                         receiverFirebaseToken = productInfo.user_info.firebaseToken;
-                        mChatPresenter.getMessage(FirebaseAuth.getInstance().getCurrentUser().getUid(), receiverUid, productId.productID);
                     }
+                    mChatPresenter.getMessage(FirebaseAuth.getInstance().getCurrentUser().getUid(), receiverUid, productId.productID);
                 }
+
             }
 
             @Override
