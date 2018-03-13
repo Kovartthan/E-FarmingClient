@@ -29,6 +29,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -429,7 +430,11 @@ public class ProfileFragment extends Fragment {
                                         if (isResetPassword) {
                                             doResetPassword();
                                         }
-                                        updateUserToDatabase(getActivity(), getApp().getFireBaseAuth().getCurrentUser());
+                                        if (downloadUri != null) {
+                                            updateUserToDatabase(getActivity(), getApp().getFireBaseAuth().getCurrentUser(), imagerls);
+                                        }else{
+                                            updateUserToDatabase(getActivity(), getApp().getFireBaseAuth().getCurrentUser(),"");
+                                        }
                                         callUpdateName();
                                     }
 
@@ -440,7 +445,8 @@ public class ProfileFragment extends Fragment {
                                 if (isResetPassword) {
                                     doResetPassword();
                                 }
-                                updateUserToDatabase(getActivity(), getApp().getFireBaseAuth().getCurrentUser());
+
+                                updateUserToDatabase(getActivity(), getApp().getFireBaseAuth().getCurrentUser(),"");
                                 callUpdateName();
                             }
                         }
@@ -449,13 +455,32 @@ public class ProfileFragment extends Fragment {
     }
 
 
-    private void updateUserToDatabase(FragmentActivity activity, FirebaseUser currentUser) {
+    private void updateUserToDatabase(FragmentActivity activity, FirebaseUser currentUser, final String imageString) {
         final DatabaseReference objRef = FirebaseDatabase.getInstance()
                 .getReference().child("client_users").child(getApp().getFireBaseAuth().getUid()).child("email");
         objRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 objRef.setValue(mEmailView.getText().toString());
+                if(!TextUtils.isEmpty(imageString)){
+                    uploadImageIntoProfile(imageString);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                efProgressDialog.dismiss();
+            }
+        });
+    }
+
+    private void uploadImageIntoProfile(final String imageString) {
+        final DatabaseReference objRef = FirebaseDatabase.getInstance()
+                .getReference().child("client_users").child(getApp().getFireBaseAuth().getUid()).child("userImage");
+        objRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                objRef.setValue(imageString);
             }
 
             @Override
@@ -535,6 +560,9 @@ public class ProfileFragment extends Fragment {
                 User user = dataSnapshot.getValue(User.class);
                 mName.setText(user.name);
                 mEmailView.setText(user.email);
+                if(!TextUtils.isEmpty(user.userImage) && isAdded()) {
+                    Glide.with(getActivity()).load(user.userImage).into(imgPhoto);
+                }
             }
 
             @Override
