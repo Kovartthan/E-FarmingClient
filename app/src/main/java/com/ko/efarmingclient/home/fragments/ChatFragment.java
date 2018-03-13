@@ -50,6 +50,7 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
 
     private String receiverUid, receiver, receiverFirebaseToken;
     private ProductInfo productId;
+    private ArrayList<Chat> chatArrayList;
 
     public static ChatFragment newInstance(String receiver,
                                            String receiverUid,
@@ -96,7 +97,7 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
         mProgressDialog.setTitle(getString(R.string.loading));
         mProgressDialog.setMessage(getString(R.string.please_wait));
         mProgressDialog.setIndeterminate(true);
-
+        chatArrayList = new ArrayList<Chat>();
         mETxtMessage.setOnEditorActionListener(this);
 
         getReceiverID();
@@ -104,7 +105,7 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
 
         mChatPresenter = new ChatPresenter(this);
 
-        mChatRecyclerAdapter = new ChatRecyclerAdapter(getActivity(), new ArrayList<Chat>());
+        mChatRecyclerAdapter = new ChatRecyclerAdapter(getActivity(),chatArrayList);
         mRecyclerViewChat.setAdapter(mChatRecyclerAdapter);
 
 
@@ -157,11 +158,9 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
     @Override
     public void onGetMessagesSuccess(Chat chat) {
         if (chat == null) {
-
             return;
         }
         mChatRecyclerAdapter.add(chat);
-        mChatRecyclerAdapter.notifyDataSetChanged();
         mRecyclerViewChat.smoothScrollToPosition(mChatRecyclerAdapter.getItemCount() - 1);
         mChatRecyclerAdapter.notifyDataSetChanged();
     }

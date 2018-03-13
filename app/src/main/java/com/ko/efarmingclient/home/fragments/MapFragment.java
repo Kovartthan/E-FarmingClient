@@ -38,10 +38,8 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -58,21 +56,16 @@ import com.ko.efarmingclient.home.navigationcomponents.PathJSONParser;
 import com.ko.efarmingclient.listener.OnNavigationListener;
 import com.ko.efarmingclient.model.ClusterCompanyInfoMarker;
 import com.ko.efarmingclient.model.CompanyInfoPublic;
-import com.ko.efarmingclient.model.NearByFinderModel;
 import com.ko.efarmingclient.util.Constants;
-import com.ko.efarmingclient.util.GpsUtils;
 
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
 import static com.ko.efarmingclient.EFApp.getApp;
 import static com.ko.efarmingclient.util.Constants.REQUEST_CHECK_SETTINGS;
-import static com.ko.efarmingclient.util.Constants.WRONG_WAY_DISTANCE;
 
 public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickListener, OnNavigationListener, GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,

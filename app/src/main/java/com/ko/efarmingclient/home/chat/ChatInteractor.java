@@ -52,7 +52,7 @@ public class ChatInteractor implements ChatContract.Interactor {
 
 
         final DatabaseReference adminDatabaseReference = FirebaseDatabase.getInstance()
-                .getReference().child("users").child(chat.receiverUid).child("all_chats").child(chat.senderUid);
+                .getReference().child("users").child(chat.receiverUid).child("all_chats").child(key.productID).child(chat.senderUid);
 
 
 
@@ -109,7 +109,7 @@ public class ChatInteractor implements ChatContract.Interactor {
 
 
         FirebaseDatabase.getInstance()
-                .getReference().child("users").child(chat.receiverUid).child("all_chats").child(chat.senderUid).child("detail_info").setValue(key);
+                .getReference().child("users").child(chat.receiverUid).child("all_chats").child(key.productID).child(chat.senderUid).child("detail_info").setValue(key);
 
     }
 
