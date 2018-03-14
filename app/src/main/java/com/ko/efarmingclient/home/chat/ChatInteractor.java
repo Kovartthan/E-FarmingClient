@@ -54,20 +54,20 @@ public class ChatInteractor implements ChatContract.Interactor {
         final DatabaseReference adminDatabaseReference = FirebaseDatabase.getInstance()
                 .getReference().child("users").child(chat.receiverUid).child("all_chats").child(key.productID).child(chat.senderUid);
 
-
+         final String fbKey =   adminDatabaseReference.push().getKey();
 
         databaseReference.child(Constants.CHAT_ROOMS).getRef().addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.hasChild(room_type_1)) {
                     Log.e(TAG, "sendMessageToFirebaseUser: " + room_type_1 + " exists");
-                    databaseReference.child(Constants.CHAT_ROOMS).child(room_type_1).child(String.valueOf(chat.timestamp)).setValue(chat);
+                    databaseReference.child(Constants.CHAT_ROOMS).child(room_type_1).child(String.valueOf(fbKey)).setValue(chat);
                 } else if (dataSnapshot.hasChild(room_type_2)) {
                     Log.e(TAG, "sendMessageToFirebaseUser: " + room_type_2 + " exists");
-                    databaseReference.child(Constants.CHAT_ROOMS).child(room_type_2).child(String.valueOf(chat.timestamp)).setValue(chat);
+                    databaseReference.child(Constants.CHAT_ROOMS).child(room_type_2).child(String.valueOf(fbKey)).setValue(chat);
                 } else {
                     Log.e(TAG, "sendMessageToFirebaseUser: success");
-                    databaseReference.child(Constants.CHAT_ROOMS).child(room_type_1).child(String.valueOf(chat.timestamp)).setValue(chat);
+                    databaseReference.child(Constants.CHAT_ROOMS).child(room_type_1).child(String.valueOf(fbKey)).setValue(chat);
                     getMessageFromFirebaseUser( chat.senderUid,chat.receiverUid,key.productID);
                 }
 
@@ -92,13 +92,13 @@ public class ChatInteractor implements ChatContract.Interactor {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.hasChild(room_type_1)) {
                     Log.e(TAG, "sendMessageToFirebaseUser: " + room_type_1 + " exists");
-                    adminDatabaseReference.child(room_type_1).child(String.valueOf(chat.timestamp)).setValue(chat);
+                    adminDatabaseReference.child(room_type_1).child(String.valueOf(fbKey)).setValue(chat);
                 } else if (dataSnapshot.hasChild(room_type_2)) {
                     Log.e(TAG, "sendMessageToFirebaseUser: " + room_type_2 + " exists");
-                    adminDatabaseReference.child(room_type_2).child(String.valueOf(chat.timestamp)).setValue(chat);
+                    adminDatabaseReference.child(room_type_2).child(String.valueOf(fbKey)).setValue(chat);
                 } else {
                     Log.e(TAG, "sendMessageToFirebaseUser: success");
-                    adminDatabaseReference.child(room_type_1).child(String.valueOf(chat.timestamp)).setValue(chat);
+                    adminDatabaseReference.child(room_type_1).child(String.valueOf(fbKey)).setValue(chat);
                 }
             }
 
