@@ -1,9 +1,14 @@
 package com.ko.efarmingclient.home.fragments;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.AppCompatSpinner;
@@ -24,7 +29,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.ko.efarmingclient.R;
 import com.ko.efarmingclient.home.activities.ChatActivity;
 import com.ko.efarmingclient.home.adapters.ProductListAdapter;
-import com.ko.efarmingclient.listener.OnChatOpenListener;
+import com.ko.efarmingclient.listener.OnProductInfoOpenListener;
 import com.ko.efarmingclient.model.ProductInfo;
 import com.ko.efarmingclient.ui.EFProgressDialog;
 import com.ko.efarmingclient.util.Constants;
@@ -33,7 +38,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 
-public class ProductListFragment extends Fragment implements OnChatOpenListener {
+public class ProductListFragment extends Fragment implements OnProductInfoOpenListener {
+    private static final int REQUEST_PHONE_CALL = 1500;
     private RecyclerView recyclerView;
     private ArrayList<ProductInfo> productInfoArrayList;
     private ProductListAdapter productListAdapter;
@@ -63,7 +69,7 @@ public class ProductListFragment extends Fragment implements OnChatOpenListener 
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         productInfoArrayList = new ArrayList<>();
         productListAdapter = new ProductListAdapter(getActivity(), productInfoArrayList);
-        productListAdapter.setOnChatOpenListener(this);
+        productListAdapter.setOnProductInfoOpenListener(this);
         fabFilter = view.findViewById(R.id.fab_filter);
         recyclerView.setAdapter(productListAdapter);
         efProgressDialog = new EFProgressDialog(getActivity());
@@ -71,6 +77,7 @@ public class ProductListFragment extends Fragment implements OnChatOpenListener 
 
     private void setupDefault() {
         getProductListFromPublicDataBase();
+        ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.CALL_PHONE},REQUEST_PHONE_CALL);
     }
 
     ValueEventListener firstValueListener;
@@ -258,5 +265,27 @@ public class ProductListFragment extends Fragment implements OnChatOpenListener 
         startActivity(new Intent(getActivity(), ChatActivity.class).putExtra("Product_id", productInfo));
     }
 
+    @Override
+    public void callToUser(ProductInfo productInfo) {
+        Intent callIntent = new Intent(Intent.ACTION_DIAL);
+        callIntent.setData(Uri.parse("tel:" + productInfo.company_info.phone));
+        if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        startActivity(callIntent);
+    }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode){
+            case REQUEST_PHONE_CALL:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                }else{
+                    ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.CALL_PHONE},REQUEST_PHONE_CALL);
+                }
+                break;
+        }
+    }
 }

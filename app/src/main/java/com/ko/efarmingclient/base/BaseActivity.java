@@ -10,6 +10,7 @@ import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
@@ -17,10 +18,17 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.widget.EditText;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.FirebaseDatabase;
 import com.ko.efarmingclient.EFApp;
 import com.ko.efarmingclient.R;
+import com.ko.efarmingclient.model.OnlineStatus;
 import com.ko.efarmingclient.ui.EFProgressDialog;
+import com.ko.efarmingclient.util.Constants;
 import com.ko.efarmingclient.util.GpsUtils;
+
+import java.util.Calendar;
 
 public class BaseActivity extends AppCompatActivity {
     public EFProgressDialog efProgressDialog;
@@ -109,6 +117,26 @@ public class BaseActivity extends AppCompatActivity {
             }
         });
     }
+
+    public void setOnlineStatus(boolean isOnline) {
+        OnlineStatus onlineStatus = new OnlineStatus(Calendar.getInstance().getTimeInMillis(), isOnline);
+        FirebaseDatabase.getInstance()
+                .getReference()
+                .child(Constants.USERS)
+                .child(getApp().getFireBaseAuth().getCurrentUser().getUid()).child(Constants.ONLINE_STATUS)
+                .setValue(onlineStatus)
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+
+                        } else {
+
+                        }
+                    }
+                });
+    }
+
 
 
 }

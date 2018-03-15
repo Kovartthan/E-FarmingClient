@@ -66,12 +66,11 @@ public class HomeActivity extends BaseActivity {
 
     private void init() {
         navigation = findViewById(R.id.navigation);
-
-
     }
 
     private void setupDefaults() {
         setMapFragmentAtInit();
+        setOnlineStatus(true);
     }
 
     private void setMapFragmentAtInit(){
@@ -90,8 +89,6 @@ public class HomeActivity extends BaseActivity {
         fragmentTransaction.replace(R.id.container_body, fragment, fragment.getClass().getSimpleName());
         fragmentTransaction.commit();
     }
-
-
 
 
 }

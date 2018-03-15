@@ -24,6 +24,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.ko.efarmingclient.R;
+import com.ko.efarmingclient.home.activities.HomeActivity;
 import com.ko.efarmingclient.home.chat.ChatContract;
 import com.ko.efarmingclient.home.chat.ChatPresenter;
 import com.ko.efarmingclient.home.adapters.ChatRecyclerAdapter;
@@ -51,6 +52,7 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
     private String receiverUid, receiver, receiverFirebaseToken;
     private ProductInfo productId;
     private ArrayList<Chat> chatArrayList;
+
 
     public static ChatFragment newInstance(String receiver,
                                            String receiverUid,
@@ -108,8 +110,13 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
         mChatRecyclerAdapter = new ChatRecyclerAdapter(getActivity(),chatArrayList);
         mRecyclerViewChat.setAdapter(mChatRecyclerAdapter);
 
-
+        getOnlineStatus();
     }
+
+    private void getOnlineStatus() {
+        mChatPresenter.getOnlineStatus(getApp().getFireBaseAuth().getCurrentUser().getUid());
+    }
+
 
     private void getInfo() {
 
@@ -170,6 +177,16 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
         Toast.makeText(getActivity(), message, Toast.LENGTH_SHORT).show();
     }
 
+    @Override
+    public void onGetOnlineStatus(boolean isOnline, long timeStamp) {
+        if(isOnline) {
+//            txtOnlineStatus.setText("Online");
+        }
+        else{
+//            txtOnlineStatus.setText(DateConversion.converToTimeForRecentActivity(timeStamp));
+        }
+    }
+
 //    @Subscribe
 //    public void onPushNotificationEvent(PushNotificationEvent pushNotificationEvent) {
 //        if (mChatRecyclerAdapter == null || mChatRecyclerAdapter.getItemCount() == 0) {
@@ -202,6 +219,21 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
         });
     }
 
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (getApp().getFireBaseAuth().getCurrentUser() != null)
+            ((HomeActivity)getActivity()).setOnlineStatus(false);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (getApp().getFireBaseAuth().getCurrentUser() != null) {
+            ((HomeActivity)getActivity()).setOnlineStatus(false);
+        }
+    }
 //    @Override
 //    public void onResume() {
 //        super.onResume();

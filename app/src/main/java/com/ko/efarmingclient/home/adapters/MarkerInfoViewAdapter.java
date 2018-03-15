@@ -29,12 +29,12 @@ public class MarkerInfoViewAdapter implements GoogleMap.InfoWindowAdapter {
     public View getInfoWindow(final Marker marker) {
         final View popup = mInflater.inflate(R.layout.info_title, null);
         ((TextView) popup.findViewById(R.id.title)).setText(TextUtils.capitalizeFirstLetter(marker.getTitle()));
-        ((Button) popup.findViewById(R.id.btn_navigate)).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onNavigationListener.onNavigationStart(marker);
-            }
-        });
+//        ((Button) popup.findViewById(R.id.btn_navigate)).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                onNavigationListener.onNavigationStart(marker);
+//            }
+//        });
         return popup;
     }
 
@@ -42,12 +42,12 @@ public class MarkerInfoViewAdapter implements GoogleMap.InfoWindowAdapter {
     public View getInfoContents(final Marker marker) {
         final View popup = mInflater.inflate(R.layout.info_title, null);
         ((TextView) popup.findViewById(R.id.title)).setText(TextUtils.capitalizeFirstLetter(marker.getTitle()));
-        ((Button) popup.findViewById(R.id.btn_navigate)).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                onNavigationListener.onNavigationStart(marker);
-            }
-        });
+//        ((Button) popup.findViewById(R.id.btn_navigate)).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                onNavigationListener.onNavigationStart(marker);
+//            }
+//        });
         return popup;
     }
 }

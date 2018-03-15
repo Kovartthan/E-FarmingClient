@@ -6,6 +6,7 @@ import com.ko.efarmingclient.model.ProductInfo;
  * Created by NEW on 3/9/2018.
  */
 
-public interface OnChatOpenListener {
+public interface OnProductInfoOpenListener {
     void openChat(ProductInfo productInfo);
+    void callToUser(ProductInfo productInfo);
 }

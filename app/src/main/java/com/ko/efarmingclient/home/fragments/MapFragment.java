@@ -176,7 +176,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
         googleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-                onNavigationStart(marker);
+//                onNavigationStart(marker);
             }
         });
     }
@@ -497,11 +497,11 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
             currentNavigationMarker.remove();
         }
         if (location != null) {
-            setCurrentLocation(location);
+//            setCurrentLocation(location);
             double latitude = location.getLatitude();
             double longitude = location.getLongitude();
             LatLng latLng = new LatLng(latitude, longitude);
-            if (isNavigationStart) {
+/*            if (isNavigationStart) {
                 points.add(latLng);
                 if (PolyUtil.isLocationOnEdge(latLng, polylineFinal.getPoints(), true, 10)) {
                     redrawLineCorrectPath(latLng);
@@ -509,7 +509,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
                     redrawWrongPath(latLng);
                 }
                 checkNavigationIsReachedDestination(latLng);
-            }
+            }*/
         }
     }
 

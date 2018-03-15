@@ -6,10 +6,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.ko.efarmingclient.R;
-import com.ko.efarmingclient.listener.OnChatOpenListener;
+import com.ko.efarmingclient.listener.OnProductInfoOpenListener;
 import com.ko.efarmingclient.model.ProductInfo;
 import com.ko.efarmingclient.util.TextUtils;
 import com.squareup.picasso.Picasso;
@@ -20,10 +21,10 @@ import java.util.ArrayList;
 public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private Context context;
     private ArrayList<ProductInfo> productInfoArrayList;
-    private OnChatOpenListener onChatOpenListener;
+    private OnProductInfoOpenListener onProductInfoOpenListener;
 
-    public void  setOnChatOpenListener(OnChatOpenListener onChatOpenListener){
-        this.onChatOpenListener = onChatOpenListener;
+    public void setOnProductInfoOpenListener(OnProductInfoOpenListener onProductInfoOpenListener){
+        this.onProductInfoOpenListener = onProductInfoOpenListener;
     }
 
     public ProductListAdapter(Context context, ArrayList<ProductInfo> productInfoArrayList) {
@@ -49,7 +50,13 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         ((ProductItemHolder) holder).txtRequestProduct.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                onChatOpenListener.openChat(productInfo);
+                onProductInfoOpenListener.openChat(productInfo);
+            }
+        });
+        ((ProductItemHolder) holder).txtCall.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onProductInfoOpenListener.callToUser(productInfo);
             }
         });
     }
@@ -75,7 +82,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         private TextView txtProductName;
         private TextView txtProductPrice;
         private TextView txtProductQuantity;
-        private TextView txtRequestProduct;
+        private LinearLayout txtRequestProduct,txtCall;
 
         public ProductItemHolder(View itemView) {
             super(itemView);
@@ -84,6 +91,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             txtProductPrice = itemView.findViewById(R.id.txt_product_price);
             txtProductQuantity = itemView.findViewById(R.id.txt_product_quantity);
             txtRequestProduct = itemView.findViewById(R.id.txt_req_chat);
+            txtCall = itemView.findViewById(R.id.txt_call);
 
         }
 

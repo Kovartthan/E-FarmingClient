@@ -7,13 +7,13 @@ import com.ko.efarmingclient.model.ProductInfo;
 
 
 public class ChatPresenter implements ChatContract.Presenter, ChatContract.OnSendMessageListener,
-        ChatContract.OnGetMessagesListener {
+        ChatContract.OnGetMessagesListener ,ChatContract.OnOnlineStatusListener {
     private ChatContract.View mView;
     private ChatInteractor mChatInteractor;
 
     public ChatPresenter(ChatContract.View view) {
         this.mView = view;
-        mChatInteractor = new ChatInteractor(this, this);
+        mChatInteractor = new ChatInteractor(this, this,this);
     }
 
     @Override
@@ -24,6 +24,11 @@ public class ChatPresenter implements ChatContract.Presenter, ChatContract.OnSen
     @Override
     public void getMessage(String senderUid, String receiverUid,String key) {
         mChatInteractor.getMessageFromFirebaseUser(senderUid, receiverUid,key);
+    }
+
+    @Override
+    public void getOnlineStatus(String receiverUid) {
+        mChatInteractor.getOnlineStatusForReceiver(receiverUid);
     }
 
     @Override
@@ -44,5 +49,11 @@ public class ChatPresenter implements ChatContract.Presenter, ChatContract.OnSen
     @Override
     public void onGetMessagesFailure(String message) {
         mView.onGetMessagesFailure(message);
+    }
+
+
+    @Override
+    public void onSendOnlineStatus(boolean isOnline, long timeStamp) {
+        mView.onGetOnlineStatus(isOnline,timeStamp);
     }
 }
