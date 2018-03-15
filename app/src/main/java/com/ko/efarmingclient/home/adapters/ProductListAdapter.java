@@ -64,6 +64,10 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         notifyDataSetChanged();
     }
 
+    public void clearList() {
+
+    }
+
     public class ProductItemHolder extends RecyclerView.ViewHolder {
 
 

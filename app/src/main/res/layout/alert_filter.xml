@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
 
     <TextView
@@ -24,9 +25,11 @@
         android:textColor="@color/colorPrimary"
         android:textSize="16sp" />
 
-    <Spinner
+    <android.support.v7.widget.AppCompatSpinner
         android:id="@+id/dynamic_spinner"
-        android:layout_width="fill_parent"
+        android:prompt="@string/click_here"
+        android:popupBackground="@android:color/white"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="15dp" />
 
@@ -59,7 +62,7 @@
             android:layout_toLeftOf="@id/txt_submit"
             android:layout_toStartOf="@id/txt_submit"
             android:padding="10dp"
-            android:text="@string/cancel"
+            android:text="Clear Filter"
             android:textColor="@color/colorPrimary"
             android:textSize="16sp"  />
     </RelativeLayout>

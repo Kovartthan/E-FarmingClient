@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.AppCompatSpinner;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -14,7 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.firebase.database.DataSnapshot;
@@ -26,9 +26,11 @@ import com.ko.efarmingclient.home.activities.ChatActivity;
 import com.ko.efarmingclient.home.adapters.ProductListAdapter;
 import com.ko.efarmingclient.listener.OnChatOpenListener;
 import com.ko.efarmingclient.model.ProductInfo;
+import com.ko.efarmingclient.ui.EFProgressDialog;
 import com.ko.efarmingclient.util.Constants;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 
 public class ProductListFragment extends Fragment implements OnChatOpenListener {
@@ -37,6 +39,9 @@ public class ProductListFragment extends Fragment implements OnChatOpenListener 
     private ProductListAdapter productListAdapter;
     private FloatingActionButton fabFilter;
     private String filterLocation;
+    private EFProgressDialog efProgressDialog;
+    private TextView txtPop;
+    private int filterPostion = -1;
 
     public ProductListFragment() {
 
@@ -61,6 +66,7 @@ public class ProductListFragment extends Fragment implements OnChatOpenListener 
         productListAdapter.setOnChatOpenListener(this);
         fabFilter = view.findViewById(R.id.fab_filter);
         recyclerView.setAdapter(productListAdapter);
+        efProgressDialog = new EFProgressDialog(getActivity());
     }
 
     private void setupDefault() {
@@ -112,11 +118,14 @@ public class ProductListFragment extends Fragment implements OnChatOpenListener 
         });
     }
 
-    private Spinner dynamicSpinner;
+    private AppCompatSpinner dynamicSpinner;
     private TextView txtSubmit;
     private TextView txtCancel;
 
     private void showFilterAlert() {
+        if (isAdded()) {
+            efProgressDialog.show();
+        }
         AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = this.getLayoutInflater();
         final View dialogView = inflater.inflate(R.layout.alert_filter, null);
@@ -126,24 +135,10 @@ public class ProductListFragment extends Fragment implements OnChatOpenListener 
         dynamicSpinner = dialogView.findViewById(R.id.dynamic_spinner);
         txtSubmit = dialogView.findViewById(R.id.txt_submit);
         txtCancel = dialogView.findViewById(R.id.txt_cancel);
+//        txtPop = dialogView.findViewById(R.id.txt_pop);
 
-        ArrayList<String> locationFilterList = getLocationFilter();
+        final ArrayList<String> locationFilterList = getLocationFilter();
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(),
-                android.R.layout.simple_spinner_item, locationFilterList);
-
-        dynamicSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                filterLocation = (String) parent.getItemAtPosition(position);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
-
-        dynamicSpinner.setAdapter(adapter);
 
         txtSubmit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -157,27 +152,74 @@ public class ProductListFragment extends Fragment implements OnChatOpenListener 
             @Override
             public void onClick(View v) {
                 alertDialog.dismiss();
+                if (valueEventListener != null)
+                    FirebaseDatabase.getInstance().getReference().removeEventListener(valueEventListener);
+                if (spinnerEventListener != null)
+                    FirebaseDatabase.getInstance().getReference().removeEventListener(spinnerEventListener);
+                if (locationFilterList != null)
+                    locationFilterList.clear();
+                filterPostion = -1;
+                getProductListFromPublicDataBase();
             }
         });
+
+        if (isAdded()) {
+            efProgressDialog.dismiss();
+        }
 
         alertDialog.show();
 
     }
 
+    private ValueEventListener spinnerEventListener;
+
     private ArrayList<String> getLocationFilter() {
         final ArrayList<String> locationFilterList = new ArrayList<>();
-        FirebaseDatabase.getInstance().getReference().child("location_filter").addValueEventListener(new ValueEventListener() {
+        spinnerEventListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     String location = snapshot.getValue().toString();
                     locationFilterList.add(location);
                 }
+
+                HashSet<String> hashSet = new HashSet<String>();
+                hashSet.addAll(locationFilterList);
+                locationFilterList.clear();
+                locationFilterList.addAll(hashSet);
+
+                String[] strings = new String[locationFilterList.size()];
+
+                for (int i = 0; i < strings.length; i++) {
+                    strings[i] = locationFilterList.get(i);
+                }
+
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),
+                        android.R.layout.simple_spinner_item, strings);
+
+                dynamicSpinner.setAdapter(adapter);
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                if (filterPostion != 1)
+                    dynamicSpinner.setSelection(filterPostion);
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
+            }
+        };
+
+        FirebaseDatabase.getInstance().getReference().child("location_filter").addValueEventListener(spinnerEventListener);
+
+        dynamicSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                filterLocation = (String) parent.getAdapter().getItem(position);
+                filterPostion = position;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
             }
         });
         return locationFilterList;
@@ -195,16 +237,11 @@ public class ProductListFragment extends Fragment implements OnChatOpenListener 
                 if (dataSnapshot != null) {
                     for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                         ProductInfo productInfo = snapshot.getValue(ProductInfo.class);
-                        if (productInfo.company_info.location.equalsIgnoreCase(filterLocation))
+                        if (productInfo.company_info.location.contains(filterLocation))
                             productInfoArrayList.add(productInfo);
                     }
                 }
                 productListAdapter.updateList(productInfoArrayList);
-                if (productInfoArrayList.size() > 0) {
-                    fabFilter.setVisibility(View.VISIBLE);
-                } else {
-                    fabFilter.setVisibility(View.GONE);
-                }
             }
 
             @Override
@@ -220,4 +257,6 @@ public class ProductListFragment extends Fragment implements OnChatOpenListener 
     public void openChat(ProductInfo productInfo) {
         startActivity(new Intent(getActivity(), ChatActivity.class).putExtra("Product_id", productInfo));
     }
+
+
 }
