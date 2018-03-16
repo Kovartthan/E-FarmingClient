@@ -91,6 +91,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     private ArrayList<LatLng> navigationTrackList;
     private PolylineOptions options, wrongPolylineOptions;
     private double destinationLatitude, destinationLongitude;
+    private boolean isExecuted;
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -176,7 +177,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
         googleMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-//                onNavigationStart(marker);
+                onNavigationStart(marker);
             }
         });
     }
@@ -225,10 +226,13 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     @Override
     public void onNavigationStart(Marker marker) {
         if (marker != null & currentLocation != null) {
-            String url = getMapsApiDirectionsUrl(marker);
-            removePreviousPolyline();
-            ReadTask downloadTask = new ReadTask();
-            downloadTask.execute(url);
+            if(!isExecuted) {
+                isExecuted = true;
+                String url = getMapsApiDirectionsUrl(marker);
+                removePreviousPolyline();
+                ReadTask downloadTask = new ReadTask();
+                downloadTask.execute(url);
+            }
         }
     }
 
@@ -268,6 +272,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
                 HttpConnection http = new HttpConnection();
                 data = http.readUrl(url[0]);
             } catch (Exception e) {
+                isExecuted = false;
                 Log.d("Background Task", e.toString());
             }
             return data;
@@ -296,6 +301,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
                 routes = parser.parse(jObject);
             } catch (Exception e) {
                 e.printStackTrace();
+                isExecuted = false;
             }
             return routes;
         }
@@ -304,6 +310,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
         protected void onPostExecute(List<List<HashMap<String, String>>> routes) {
             ArrayList<LatLng> points = null;
             PolylineOptions polyLineOptions = null;
+            polylineFinal = null;
             // traversing through routes
             for (int i = 0; i < routes.size(); i++) {
                 points = new ArrayList<LatLng>();
@@ -325,10 +332,11 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
                 polyLineOptions.color(Color.BLUE);
             }
 
+            if(polyLineOptions != null)
             polylineFinal = googleMap.addPolyline(polyLineOptions);
 
             isNavigationStart = true;
-
+            isExecuted = false;
         }
     }
 

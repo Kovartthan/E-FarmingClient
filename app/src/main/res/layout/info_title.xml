@@ -16,13 +16,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <!--<Button-->
-        <!--android:id="@+id/btn_navigate"-->
-        <!--android:textSize="10sp"-->
-        <!--android:layout_marginTop="7dp"-->
-        <!--android:textColor="@android:color/white"-->
-        <!--android:background="@drawable/ripple_green_button"-->
-        <!--android:text="@string/navigate"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content" />-->
+    <Button
+        android:id="@+id/btn_navigate"
+        android:textSize="10sp"
+        android:layout_marginTop="7dp"
+        android:textColor="@android:color/white"
+        android:background="@drawable/ripple_green_button"
+        android:text="@string/navigate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 </LinearLayout>

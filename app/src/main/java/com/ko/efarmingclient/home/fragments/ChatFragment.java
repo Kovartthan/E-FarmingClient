@@ -223,15 +223,15 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
     @Override
     public void onPause() {
         super.onPause();
-        if (getApp().getFireBaseAuth().getCurrentUser() != null)
-            ((HomeActivity)getActivity()).setOnlineStatus(false);
+//        if (getApp().getFireBaseAuth().getCurrentUser() != null)
+//            ((HomeActivity)getActivity()).setOnlineStatus(false);
     }
 
     @Override
     public void onResume() {
         super.onResume();
         if (getApp().getFireBaseAuth().getCurrentUser() != null) {
-            ((HomeActivity)getActivity()).setOnlineStatus(false);
+//            ((HomeActivity)getActivity()).setOnlineStatus(false);
         }
     }
 //    @Override

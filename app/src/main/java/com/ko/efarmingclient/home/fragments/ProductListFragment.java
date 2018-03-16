@@ -244,7 +244,7 @@ public class ProductListFragment extends Fragment implements OnProductInfoOpenLi
                 if (dataSnapshot != null) {
                     for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                         ProductInfo productInfo = snapshot.getValue(ProductInfo.class);
-                        if (productInfo.company_info.location.contains(filterLocation))
+                        if (productInfo != null && productInfo.company_info.location.contains(filterLocation))
                             productInfoArrayList.add(productInfo);
                     }
                 }
