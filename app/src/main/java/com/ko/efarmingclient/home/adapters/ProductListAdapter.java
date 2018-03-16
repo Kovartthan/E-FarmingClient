@@ -13,6 +13,7 @@ import com.ko.efarmingclient.R;
 import com.ko.efarmingclient.listener.OnProductInfoOpenListener;
 import com.ko.efarmingclient.model.ProductInfo;
 import com.ko.efarmingclient.util.TextUtils;
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -39,10 +40,21 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     @Override
-    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
+    public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
         final ProductInfo productInfo = productInfoArrayList.get(position);
         if (!TextUtils.isEmpty(productInfo.imageUrl)) {
-            Picasso.with(context).load(productInfo.imageUrl).into(((ProductItemHolder) holder).imgProduct);
+            ((ProductItemHolder) holder).txtPreviewText.setText("Loading Image");
+            Picasso.get().load(productInfo.imageUrl).resize(300,300).into(((ProductItemHolder) holder).imgProduct, new Callback() {
+                @Override
+                public void onSuccess() {
+                    ((ProductItemHolder) holder).txtPreviewText.setText("");
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    ((ProductItemHolder) holder).txtPreviewText.setText("Error occurred");
+                }
+            });
         }
         ((ProductItemHolder) holder).txtProductName.setText(TextUtils.capitalizeFirstLetter(productInfo.productName));
         ((ProductItemHolder) holder).txtProductPrice.setText("Rs " + productInfo.productPrice);
@@ -83,7 +95,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         private TextView txtProductPrice;
         private TextView txtProductQuantity;
         private LinearLayout txtRequestProduct,txtCall;
-
+        private TextView txtPreviewText;
         public ProductItemHolder(View itemView) {
             super(itemView);
             imgProduct = itemView.findViewById(R.id.img_product);
@@ -92,7 +104,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             txtProductQuantity = itemView.findViewById(R.id.txt_product_quantity);
             txtRequestProduct = itemView.findViewById(R.id.txt_req_chat);
             txtCall = itemView.findViewById(R.id.txt_call);
-
+            txtPreviewText = itemView.findViewById(R.id.txt_preview);
         }
 
     }

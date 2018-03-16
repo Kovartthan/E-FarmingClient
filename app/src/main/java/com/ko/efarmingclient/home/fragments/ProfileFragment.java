@@ -29,7 +29,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
+
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -57,6 +57,7 @@ import com.ko.efarmingclient.util.CompressImage;
 import com.ko.efarmingclient.util.DeviceUtils;
 import com.ko.efarmingclient.util.TempManager;
 import com.soundcloud.android.crop.Crop;
+import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.util.HashMap;
@@ -561,7 +562,7 @@ public class ProfileFragment extends Fragment {
                 mName.setText(user.name);
                 mEmailView.setText(user.email);
                 if(!TextUtils.isEmpty(user.userImage) && isAdded()) {
-                    Glide.with(getActivity()).load(user.userImage).into(imgPhoto);
+                    Picasso.get().load(user.userImage).placeholder(R.drawable.ic_account_circle_black_48dp).into(imgPhoto);
                 }
             }
 

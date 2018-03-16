@@ -417,21 +417,13 @@ public class SignUpActivity extends BaseActivity {
                                         }
 
                                         //Add user data and image URL to firebase database
-                                        if (efProgressDialog.isShowing())
-                                            efProgressDialog.dismiss();
-                                        Toast.makeText(SignUpActivity.this, "Sign up successful", Toast.LENGTH_LONG).show();
                                         addUserToDatabase(SignUpActivity.this, getApp().getFireBaseAuth().getCurrentUser());
-                                        finish();
                                     }
 
                                 });
 
                             } else {
-                                if (efProgressDialog.isShowing())
-                                    efProgressDialog.dismiss();
-                                Toast.makeText(SignUpActivity.this, "Sign up successful", Toast.LENGTH_LONG).show();
                                 addUserToDatabase(SignUpActivity.this, getApp().getFireBaseAuth().getCurrentUser());
-                                finish();
                             }
                         }
 
@@ -453,9 +445,14 @@ public class SignUpActivity extends BaseActivity {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
-                            // successfully added user
+                            if (efProgressDialog.isShowing())
+                                efProgressDialog.dismiss();
+                            Toast.makeText(SignUpActivity.this, "Sign up successful", Toast.LENGTH_LONG).show();
+                            finish();
                         } else {
-                            // failed to add user
+                            if (efProgressDialog.isShowing())
+                                efProgressDialog.dismiss();
+                            Toast.makeText(SignUpActivity.this, "Sign up error !", Toast.LENGTH_LONG).show();
                         }
                     }
                 });

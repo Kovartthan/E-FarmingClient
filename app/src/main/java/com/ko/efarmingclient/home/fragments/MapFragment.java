@@ -208,7 +208,12 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
             ClusterCompanyInfoMarker clusterCompanyInfoMarker = new ClusterCompanyInfoMarker(latLng, companyInfo.name);
             mClusterManager.addItem(clusterCompanyInfoMarker);
         }
-        mClusterManager.cluster();
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mClusterManager.cluster();
+            }
+        },500);
     }
 
     @Override
