@@ -3,6 +3,7 @@ package com.ko.efarmingclient.home.fragments;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
@@ -92,7 +93,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     private PolylineOptions options, wrongPolylineOptions;
     private double destinationLatitude, destinationLongitude;
     private boolean isExecuted;
-
+    private ProgressDialog progressDialog;
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -135,6 +136,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
             }
         }, 200);
         points = new ArrayList<LatLng>();
+        progressDialog = new ProgressDialog(getActivity());
     }
 
     private void setupDefault() {
@@ -238,6 +240,10 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
                 ReadTask downloadTask = new ReadTask();
                 downloadTask.execute(url);
             }
+        }else{
+            Toast.makeText(getActivity(),"Current location is fetching..,please try again",Toast.LENGTH_SHORT).show();
+            buildGoogleApiClient();
+            startLocationUpdates(getActivity());
         }
     }
 
@@ -270,6 +276,14 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     }
 
     private class ReadTask extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog.setMessage("Calculating route....");
+            progressDialog.show();
+        }
+
         @Override
         protected String doInBackground(String... url) {
             String data = "";
@@ -278,6 +292,15 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
                 data = http.readUrl(url[0]);
             } catch (Exception e) {
                 isExecuted = false;
+                if(isAdded()) {
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            progressDialog.dismiss();
+                            Toast.makeText(getActivity(),"Calculating route was failed, try again",Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
                 Log.d("Background Task", e.toString());
             }
             return data;
@@ -306,6 +329,15 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
                 routes = parser.parse(jObject);
             } catch (Exception e) {
                 e.printStackTrace();
+                if(isAdded()) {
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            progressDialog.dismiss();
+                            Toast.makeText(getActivity(),"Calculating route was failed, try again",Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
                 isExecuted = false;
             }
             return routes;
@@ -339,7 +371,7 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
 
             if(polyLineOptions != null)
             polylineFinal = googleMap.addPolyline(polyLineOptions);
-
+            progressDialog.dismiss();
             isNavigationStart = true;
             isExecuted = false;
         }
@@ -391,7 +423,8 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
                             longitude = location.getLongitude();
                             moveMap(latitude, longitude);
                         } else {
-
+                            buildGoogleApiClient();
+                            startLocationUpdates(getActivity());
                         }
                     }
                 });

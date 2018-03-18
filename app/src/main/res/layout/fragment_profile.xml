@@ -163,6 +163,17 @@
                 android:textColor="@android:color/white"
                 android:textSize="14sp" />
 
+            <Button
+                android:id="@+id/txt_log_out"
+                android:layout_width="150dp"
+                android:layout_height="50dp"
+                android:layout_marginBottom="10dp"
+                android:layout_gravity="center"
+                android:background="@drawable/ripple_green_button"
+                android:text="Logout"
+                android:textColor="@android:color/white"
+                android:textSize="14sp" />
+
         </LinearLayout>
 
 

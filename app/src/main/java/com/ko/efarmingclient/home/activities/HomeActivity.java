@@ -10,6 +10,7 @@ import android.view.MenuItem;
 
 import com.ko.efarmingclient.R;
 import com.ko.efarmingclient.base.BaseActivity;
+import com.ko.efarmingclient.home.fragments.CompanyListFragment;
 import com.ko.efarmingclient.home.fragments.ProfileFragment;
 import com.ko.efarmingclient.home.fragments.MapFragment;
 import com.ko.efarmingclient.home.fragments.ProductListFragment;
@@ -30,7 +31,7 @@ public class HomeActivity extends BaseActivity {
                     applyFragment();
                     return true;
                 case R.id.navigation_products:
-                    fragment = new ProductListFragment();
+                    fragment = new CompanyListFragment();
                     applyFragment();
                     return true;
                 case R.id.navigation_profile:

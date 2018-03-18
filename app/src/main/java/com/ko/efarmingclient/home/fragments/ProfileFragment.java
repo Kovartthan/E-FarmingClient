@@ -150,6 +150,12 @@ public class ProfileFragment extends Fragment {
         cameraUtils = new CameraUtils(getActivity(), getActivity());
         radioGroup = view.findViewById(R.id.rg_reset_password);
         efProgressDialog = new EFProgressDialog(getActivity());
+        view.findViewById(R.id.txt_log_out).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                doLogout();
+            }
+        });
     }
 
     private void setupDefault() {
@@ -271,6 +277,7 @@ public class ProfileFragment extends Fragment {
                                 }
                             }, false);
                         } else {
+
                             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                             builder.setTitle(getResources().getString(R.string.go_to_settings_enable_permission));
 //                                builder.setMessage(String.format(getString(R.string.denied_msg), type));
