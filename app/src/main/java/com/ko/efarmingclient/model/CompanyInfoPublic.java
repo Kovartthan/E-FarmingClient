@@ -13,6 +13,7 @@ public class CompanyInfoPublic implements Serializable {
         public String location;
         public String photoUrl;
         public double latitude,longitude;
+        public String companyType;
         public CompanyInfoPublic(){
 
         }

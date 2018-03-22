@@ -9,7 +9,7 @@ public class CompanyInfo {
     public String city;
     public String phone;
     public String location;
-
+    public String companyType;
     public CompanyInfo(){
 
     }

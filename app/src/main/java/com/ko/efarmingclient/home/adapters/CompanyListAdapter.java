@@ -2,6 +2,7 @@ package com.ko.efarmingclient.home.adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.GradientDrawable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,7 +12,6 @@ import android.widget.TextView;
 
 import com.ko.efarmingclient.R;
 import com.ko.efarmingclient.home.activities.ProductListActivity;
-import com.ko.efarmingclient.listener.OnProductInfoOpenListener;
 import com.ko.efarmingclient.model.CompanyInfoPublic;
 import com.ko.efarmingclient.util.Constants;
 import com.ko.efarmingclient.util.TextUtils;
@@ -20,11 +20,8 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
-/**
- * Created by NEW on 3/18/2018.
- */
 
-public class CompanyListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>  {
+public class CompanyListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private Context context;
     private ArrayList<CompanyInfoPublic> companyInfoPublicArrayList;
 
@@ -46,7 +43,7 @@ public class CompanyListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         ((CompanyItemHolder) holder).txtCompanyLocation.setText(TextUtils.capitalizeFirstLetter(companyInfoPublic.city));
         if (!TextUtils.isEmpty(companyInfoPublic.photoUrl)) {
             ((CompanyItemHolder) holder).txtPreviewText.setText("Loading Image");
-            Picasso.get().load(companyInfoPublic.photoUrl).resize(300,300).into(((CompanyItemHolder) holder).imgProduct, new Callback() {
+            Picasso.get().load(companyInfoPublic.photoUrl).resize(300, 300).into(((CompanyItemHolder) holder).imgProduct, new Callback() {
                 @Override
                 public void onSuccess() {
                     ((CompanyItemHolder) holder).txtPreviewText.setText("");
@@ -58,10 +55,21 @@ public class CompanyListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 }
             });
         }
+        if (companyInfoPublic.companyType.equalsIgnoreCase("Wholesaler")) {
+            ((CompanyItemHolder) holder).txtComapnyType.setText("Wholesaler");
+            ((CompanyItemHolder) holder).txtComapnyType.setTextColor(context.getResources().getColor(android.R.color.holo_orange_light));
+            GradientDrawable drawable = (GradientDrawable) ((CompanyItemHolder) holder).txtComapnyType.getBackground();
+            drawable.setStroke(2, context.getResources().getColor(android.R.color.holo_orange_light));
+        } else if (companyInfoPublic.companyType.equalsIgnoreCase("Dealer")) {
+            ((CompanyItemHolder) holder).txtComapnyType.setText("Dealer");
+            ((CompanyItemHolder) holder).txtComapnyType.setTextColor(context.getResources().getColor(android.R.color.holo_red_light));
+            GradientDrawable drawable = (GradientDrawable) ((CompanyItemHolder) holder).txtComapnyType.getBackground();
+            drawable.setStroke(2, context.getResources().getColor(android.R.color.holo_red_light));
+        }
         ((CompanyItemHolder) holder).txtExploreProduct.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                context.startActivity(new Intent(context,ProductListActivity.class).putExtra(Constants.COMPANY_INFO,companyInfoPublic));
+                context.startActivity(new Intent(context, ProductListActivity.class).putExtra(Constants.COMPANY_INFO, companyInfoPublic));
             }
         });
     }
@@ -88,6 +96,8 @@ public class CompanyListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         private TextView txtCompanyLocation;
         private TextView txtExploreProduct;
         private TextView txtPreviewText;
+        private TextView txtComapnyType;
+
         public CompanyItemHolder(View itemView) {
             super(itemView);
             imgProduct = itemView.findViewById(R.id.img_product);
@@ -95,6 +105,7 @@ public class CompanyListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             txtCompanyLocation = itemView.findViewById(R.id.txt_company_loc);
             txtExploreProduct = itemView.findViewById(R.id.txt_explore_products);
             txtPreviewText = itemView.findViewById(R.id.txt_preview);
+            txtComapnyType = itemView.findViewById(R.id.txt_company_type);
         }
 
     }

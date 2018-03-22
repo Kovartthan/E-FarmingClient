@@ -54,4 +54,13 @@
         <item name="android:textColorPrimary">@android:color/white</item>
         <!--      <item name="android:textColorSecondary">SUBTITLE_COLOR_GOES_HERE</item>-->
     </style>
+
+    <style name="AppThemeHome" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:statusBarColor">@color/colorPrimaryDark</item>
+        <item name="android:itemTextAppearance">@style/menuItemColor</item>
+    </style>
 </resources>
