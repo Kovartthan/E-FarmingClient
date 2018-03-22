@@ -25,7 +25,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     private ArrayList<ProductInfo> productInfoArrayList;
     private OnProductInfoOpenListener onProductInfoOpenListener;
 
-    public void setOnProductInfoOpenListener(OnProductInfoOpenListener onProductInfoOpenListener){
+    public void setOnProductInfoOpenListener(OnProductInfoOpenListener onProductInfoOpenListener) {
         this.onProductInfoOpenListener = onProductInfoOpenListener;
     }
 
@@ -45,7 +45,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         final ProductInfo productInfo = productInfoArrayList.get(position);
         if (!TextUtils.isEmpty(productInfo.imageUrl)) {
             ((ProductItemHolder) holder).txtPreviewText.setText("Loading Image");
-            Picasso.get().load(productInfo.imageUrl).resize(300,300).into(((ProductItemHolder) holder).imgProduct, new Callback() {
+            Picasso.get().load(productInfo.imageUrl).resize(300, 300).into(((ProductItemHolder) holder).imgProduct, new Callback() {
                 @Override
                 public void onSuccess() {
                     ((ProductItemHolder) holder).txtPreviewText.setText("");
@@ -60,6 +60,10 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         ((ProductItemHolder) holder).txtProductName.setText(TextUtils.capitalizeFirstLetter(productInfo.productName));
         ((ProductItemHolder) holder).txtProductPrice.setText("Rs " + productInfo.productPrice);
         ((ProductItemHolder) holder).txtProductQuantity.setText("Available units : " + productInfo.productQuantity);
+        if (productInfo.rating != 0 && productInfo.ratingNoOfPerson != 0) {
+            int rating = Math.round(productInfo.rating / productInfo.ratingNoOfPerson);
+            ((ProductItemHolder) holder).ratingBar.setRating(rating);
+        }
         ((ProductItemHolder) holder).txtRequestProduct.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -75,7 +79,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         ((ProductItemHolder) holder).ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
             @Override
             public void onRatingChanged(RatingBar ratingBar, float v, boolean b) {
-                onProductInfoOpenListener.onSetRatingToProducts((int) ratingBar.getRating(),productInfo);
+                onProductInfoOpenListener.onSetRatingToProducts((int) ratingBar.getRating(), productInfo);
             }
         });
     }
@@ -100,9 +104,10 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         private TextView txtProductName;
         private TextView txtProductPrice;
         private TextView txtProductQuantity;
-        private LinearLayout txtRequestProduct,txtCall;
+        private LinearLayout txtRequestProduct, txtCall;
         private TextView txtPreviewText;
         private RatingBar ratingBar;
+
         public ProductItemHolder(View itemView) {
             super(itemView);
             imgProduct = itemView.findViewById(R.id.img_product);
