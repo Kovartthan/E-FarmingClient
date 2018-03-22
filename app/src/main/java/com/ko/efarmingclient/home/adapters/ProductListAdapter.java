@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.ko.efarmingclient.R;
@@ -71,6 +72,12 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 onProductInfoOpenListener.callToUser(productInfo);
             }
         });
+        ((ProductItemHolder) holder).ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+            @Override
+            public void onRatingChanged(RatingBar ratingBar, float v, boolean b) {
+                onProductInfoOpenListener.onSetRatingToProducts((int) ratingBar.getRating(),productInfo);
+            }
+        });
     }
 
     @Override
@@ -84,18 +91,18 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     }
 
     public void clearList() {
-
+        this.productInfoArrayList.clear();
+        notifyDataSetChanged();
     }
 
     public class ProductItemHolder extends RecyclerView.ViewHolder {
-
-
         private ImageView imgProduct;
         private TextView txtProductName;
         private TextView txtProductPrice;
         private TextView txtProductQuantity;
         private LinearLayout txtRequestProduct,txtCall;
         private TextView txtPreviewText;
+        private RatingBar ratingBar;
         public ProductItemHolder(View itemView) {
             super(itemView);
             imgProduct = itemView.findViewById(R.id.img_product);
@@ -105,6 +112,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             txtRequestProduct = itemView.findViewById(R.id.txt_req_chat);
             txtCall = itemView.findViewById(R.id.txt_call);
             txtPreviewText = itemView.findViewById(R.id.txt_preview);
+            ratingBar = itemView.findViewById(R.id.rb_star);
         }
 
     }

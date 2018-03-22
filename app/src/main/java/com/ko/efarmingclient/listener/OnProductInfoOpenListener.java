@@ -9,4 +9,5 @@ import com.ko.efarmingclient.model.ProductInfo;
 public interface OnProductInfoOpenListener {
     void openChat(ProductInfo productInfo);
     void callToUser(ProductInfo productInfo);
+    void onSetRatingToProducts(int rating ,ProductInfo productInfo);
 }

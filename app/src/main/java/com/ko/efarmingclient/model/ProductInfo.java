@@ -14,6 +14,8 @@ public class ProductInfo implements Serializable {
     public String productID;
     public UserInfo user_info;
     public CompanyInfoPublic company_info;
+    public int rating;
+    public int ratingNoOfPerson;
     public ProductInfo(){
 
     }

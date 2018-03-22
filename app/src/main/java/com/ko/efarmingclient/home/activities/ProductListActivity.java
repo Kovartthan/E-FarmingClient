@@ -1,20 +1,22 @@
 package com.ko.efarmingclient.home.activities;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
@@ -23,7 +25,6 @@ import com.ko.efarmingclient.R;
 import com.ko.efarmingclient.base.BaseActivity;
 import com.ko.efarmingclient.home.adapters.ProductListAdapter;
 import com.ko.efarmingclient.listener.OnProductInfoOpenListener;
-import com.ko.efarmingclient.model.CompanyInfo;
 import com.ko.efarmingclient.model.CompanyInfoPublic;
 import com.ko.efarmingclient.model.ProductInfo;
 import com.ko.efarmingclient.util.Constants;
@@ -38,6 +39,8 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
     private ProductListAdapter productListAdapter;
     private FloatingActionButton fabFilter;
     private String companyKey;
+    private ProgressDialog progressDialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,13 +58,14 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
         productListAdapter.setOnProductInfoOpenListener(this);
         fabFilter = findViewById(R.id.fab_filter);
         recyclerView.setAdapter(productListAdapter);
+        progressDialog = new ProgressDialog(this);
     }
 
     private void setupDefault() {
-        if(getIntent() != null && getIntent().hasExtra(Constants.COMPANY_INFO)){
+        if (getIntent() != null && getIntent().hasExtra(Constants.COMPANY_INFO)) {
             CompanyInfoPublic companyInfo = (CompanyInfoPublic) getIntent().getSerializableExtra(Constants.COMPANY_INFO);
             companyKey = companyInfo.location;
-            setTitle(TextUtils.capitalizeFirstLetter(companyInfo.name)+" Product's");
+            setTitle(TextUtils.capitalizeFirstLetter(companyInfo.name) + " Product's");
         }
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         fabFilter.setVisibility(View.GONE);
@@ -91,7 +95,7 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
                 if (dataSnapshot != null) {
                     for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                         ProductInfo productInfo = snapshot.getValue(ProductInfo.class);
-                        if(productInfo.company_info.location.equals(companyKey)) {
+                        if (productInfo.company_info.location.equals(companyKey)) {
                             productInfoArrayList.add(productInfo);
                         }
                     }
@@ -111,7 +115,7 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
     }
 
     private void setupEvent() {
-        
+
     }
 
     @Override
@@ -130,6 +134,13 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
     }
 
     @Override
+    public void onSetRatingToProducts(int rating, ProductInfo productInfo) {
+        progressDialog.setMessage("Updating rating...");
+        progressDialog.show();
+        setRatingToTheDb(rating, productInfo);
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
@@ -141,5 +152,32 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
                 }
                 break;
         }
+    }
+
+    private void setRatingToTheDb(int rating, final ProductInfo productInfo) {
+        int finalRating = rating + productInfo.rating;
+        FirebaseDatabase.getInstance()
+                .getReference().child(Constants.PRODUCT_INFO).child(productInfo.productID).child("rating").setValue(finalRating).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                boolean isRated = TextUtils.isNullOrEmpty("" + productInfo.rating);
+                if (!isRated) {
+                    callRatingNofPerson(productInfo.ratingNoOfPerson, productInfo);
+                }else{
+                    productListAdapter.clearList();
+                    getProductListFromPublicDataBase();
+                    progressDialog.dismiss();
+                }
+            }
+        });
+    }
+
+    private void callRatingNofPerson(int ratingNoOfPerson, ProductInfo productInfo) {
+        int finalRatingNoOfPerson = ratingNoOfPerson + 1;
+        FirebaseDatabase.getInstance()
+                .getReference().child(Constants.PRODUCT_INFO).child(productInfo.productID).child("ratingNoOfPerson").setValue(finalRatingNoOfPerson);
+        productListAdapter.clearList();
+        getProductListFromPublicDataBase();
+        progressDialog.dismiss();
     }
 }
