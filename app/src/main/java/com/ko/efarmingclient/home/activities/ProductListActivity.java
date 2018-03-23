@@ -135,9 +135,9 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
 
     @Override
     public void onSetRatingToProducts(int rating, ProductInfo productInfo) {
-        progressDialog.setMessage("Updating rating...");
-        progressDialog.show();
-        setRatingToTheDb(rating, productInfo);
+//        progressDialog.setMessage("Updating rating...");
+//        progressDialog.show();
+//        setRatingToTheDb(rating, productInfo);
     }
 
     @Override
