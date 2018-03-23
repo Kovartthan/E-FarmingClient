@@ -279,6 +279,11 @@ public class ProductListFragment extends Fragment implements OnProductInfoOpenLi
     }
 
     @Override
+    public void onSetRatingToProducts(int rating, ProductInfo productInfo) {
+
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {

@@ -13,7 +13,7 @@ import com.ko.efarmingclient.base.BaseActivity;
 import com.ko.efarmingclient.home.fragments.CompanyListFragment;
 import com.ko.efarmingclient.home.fragments.ProfileFragment;
 import com.ko.efarmingclient.home.fragments.MapFragment;
-import com.ko.efarmingclient.home.fragments.ProductListFragment;
+//import com.ko.efarmingclient.home.fragments.ProductListFragment;
 
 public class HomeActivity extends BaseActivity {
 
