@@ -2,7 +2,6 @@ package com.ko.efarmingclient.home.adapters;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,14 +10,22 @@ import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.ko.efarmingclient.R;
 import com.ko.efarmingclient.listener.OnProductInfoOpenListener;
 import com.ko.efarmingclient.model.ProductInfo;
+import com.ko.efarmingclient.util.Constants;
 import com.ko.efarmingclient.util.TextUtils;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+
+import static com.ko.efarmingclient.EFApp.getApp;
 
 
 public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
@@ -61,10 +68,14 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         ((ProductItemHolder) holder).txtProductName.setText(TextUtils.capitalizeFirstLetter(productInfo.productName));
         ((ProductItemHolder) holder).txtProductPrice.setText("Rs " + productInfo.productPrice);
         ((ProductItemHolder) holder).txtProductQuantity.setText("Available units : " + productInfo.productQuantity);
-        if (productInfo.rating != 0 && productInfo.ratingNoOfPerson != 0) {
-            int rating = Math.round(productInfo.rating / productInfo.ratingNoOfPerson);
-            ((ProductItemHolder) holder).ratingBar.setRating(rating);
-            Log.e("change","done");
+        int userRating = onProductInfoOpenListener.onGetRatingFromFirebase(productInfo);
+        if (userRating != 0) {
+            ((ProductItemHolder) holder).ratingBar.setRating(userRating);
+        }
+
+        if (productInfo.overAllRating != 0 && productInfo.ratingNoOfPerson != 0) {
+            int rating = Math.round(productInfo.overAllRating / productInfo.ratingNoOfPerson);
+            ((ProductItemHolder) holder).overallRatingBar.setRating(rating);
         }
         ((ProductItemHolder) holder).txtRequestProduct.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -109,6 +120,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         private LinearLayout txtRequestProduct, txtCall;
         private TextView txtPreviewText;
         private RatingBar ratingBar;
+        private RatingBar overallRatingBar;
 
         public ProductItemHolder(View itemView) {
             super(itemView);
@@ -120,7 +132,57 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
             txtCall = itemView.findViewById(R.id.txt_call);
             txtPreviewText = itemView.findViewById(R.id.txt_preview);
             ratingBar = itemView.findViewById(R.id.rb_star);
+            overallRatingBar = itemView.findViewById(R.id.rb_overall_star);
         }
 
     }
+//
+//    ValueEventListener valueEventListener,setRatingListener;
+//
+//    private void getRatingFromTheDb(final ProductInfo productInfo, ProductItemHolder holder) {
+//
+//
+//        final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child(Constants.PRODUCT_INFO).child(productInfo.productID);
+//
+//        valueEventListener = new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                if (dataSnapshot.hasChild("userRating")) {
+//                    decideToSetRating(databaseReference,productInfo);
+//                } else {
+//
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//
+//            }
+//        };
+//
+//        databaseReference.addListenerForSingleValueEvent(valueEventListener);
+//
+//    }
+//
+//    private void decideToSetRating(DatabaseReference databaseReference,final ProductInfo productInfo) {
+//
+//        FirebaseDatabase.getInstance().getReference().removeEventListener(valueEventListener);
+//
+//        setRatingListener = new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                int userRating = Integer.parseInt("" + dataSnapshot.getValue());
+//
+//            }
+//
+//            @Override
+//            public void onCancelled(DatabaseError databaseError) {
+//
+//            }
+//        };
+//
+//        databaseReference.child("userRating").child(getApp().getFireBaseAuth().getCurrentUser().getUid()).addListenerForSingleValueEvent(setRatingListener);
+//
+//    }
+
 }

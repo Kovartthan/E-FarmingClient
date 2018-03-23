@@ -284,6 +284,11 @@ public class ProductListFragment extends Fragment implements OnProductInfoOpenLi
     }
 
     @Override
+    public int onGetRatingFromFirebase(ProductInfo productInfo) {
+        return 0;
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {

@@ -406,6 +406,8 @@ public class MapFragment extends Fragment implements GoogleMap.OnMarkerClickList
     }
 
     private void getLastKnownLocation() {
+        if(!isAdded())
+            return;
 
         if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(),
