@@ -31,9 +31,9 @@ import com.ko.efarmingclient.home.activities.ChatActivity;
 import com.ko.efarmingclient.home.adapters.ProductListAdapter;
 import com.ko.efarmingclient.listener.OnProductInfoOpenListener;
 import com.ko.efarmingclient.model.ProductInfo;
+import com.ko.efarmingclient.model.UserRating;
 import com.ko.efarmingclient.ui.EFProgressDialog;
 import com.ko.efarmingclient.util.Constants;
-import com.ko.efarmingclient.util.TextUtils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -72,7 +72,7 @@ public class ProductListFragment extends Fragment implements OnProductInfoOpenLi
 //        recyclerView.setDrawingCacheEnabled(true);
 //        recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         productInfoArrayList = new ArrayList<>();
-        productListAdapter = new ProductListAdapter(getActivity(), productInfoArrayList);
+        productListAdapter = new ProductListAdapter(getActivity(), productInfoArrayList, new ArrayList<UserRating>());
         productListAdapter.setOnProductInfoOpenListener(this);
         fabFilter = view.findViewById(R.id.fab_filter);
         recyclerView.setAdapter(productListAdapter);

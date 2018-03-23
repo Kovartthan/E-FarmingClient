@@ -10,36 +10,31 @@ import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.ko.efarmingclient.R;
 import com.ko.efarmingclient.listener.OnProductInfoOpenListener;
 import com.ko.efarmingclient.model.ProductInfo;
-import com.ko.efarmingclient.util.Constants;
+import com.ko.efarmingclient.model.UserRating;
 import com.ko.efarmingclient.util.TextUtils;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
-import static com.ko.efarmingclient.EFApp.getApp;
-
 
 public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private Context context;
     private ArrayList<ProductInfo> productInfoArrayList;
     private OnProductInfoOpenListener onProductInfoOpenListener;
+    private ArrayList<UserRating> ratingArrayList;
 
     public void setOnProductInfoOpenListener(OnProductInfoOpenListener onProductInfoOpenListener) {
         this.onProductInfoOpenListener = onProductInfoOpenListener;
     }
 
-    public ProductListAdapter(Context context, ArrayList<ProductInfo> productInfoArrayList) {
+    public ProductListAdapter(Context context, ArrayList<ProductInfo> productInfoArrayList, ArrayList<UserRating> ratingArrayList) {
         this.context = context;
         this.productInfoArrayList = productInfoArrayList;
+        this.ratingArrayList = ratingArrayList;
     }
 
     @Override
@@ -68,11 +63,13 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         ((ProductItemHolder) holder).txtProductName.setText(TextUtils.capitalizeFirstLetter(productInfo.productName));
         ((ProductItemHolder) holder).txtProductPrice.setText("Rs " + productInfo.productPrice);
         ((ProductItemHolder) holder).txtProductQuantity.setText("Available units : " + productInfo.productQuantity);
-        int userRating = onProductInfoOpenListener.onGetRatingFromFirebase(productInfo);
-        if (userRating != 0) {
-            ((ProductItemHolder) holder).ratingBar.setRating(userRating);
+        for(UserRating userRating : ratingArrayList){
+            if(productInfo.productID.equals(userRating.productID)){
+                if(userRating.rating != 0)
+                ((ProductItemHolder) holder).ratingBar.setRating(userRating.rating);
+            }
         }
-
+//        int userRating = onProductInfoOpenListener.onGetRatingFromFirebase(productInfo);
         if (productInfo.overAllRating != 0 && productInfo.ratingNoOfPerson != 0) {
             int rating = Math.round(productInfo.overAllRating / productInfo.ratingNoOfPerson);
             ((ProductItemHolder) holder).overallRatingBar.setRating(rating);

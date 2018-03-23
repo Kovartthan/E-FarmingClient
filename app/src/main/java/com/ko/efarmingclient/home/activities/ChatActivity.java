@@ -40,6 +40,8 @@ public class ChatActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setTitle("Request product to ShopKeeper");
     }
+    /**
+     * *used to change the fragment *****/
 
     private void applyFragment() {
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
