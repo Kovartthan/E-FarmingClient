@@ -99,8 +99,9 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         return productInfoArrayList.size();
     }
 
-    public void updateList(ArrayList<ProductInfo> productInfoArrayList) {
+    public void updateList(ArrayList<ProductInfo> productInfoArrayList,ArrayList<UserRating> ratingArrayList) {
         this.productInfoArrayList = productInfoArrayList;
+        this.ratingArrayList = ratingArrayList;
         notifyDataSetChanged();
     }
 

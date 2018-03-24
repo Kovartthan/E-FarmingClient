@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
@@ -105,7 +104,7 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
                         }
                     }
                 }
-                productListAdapter.updateList(productInfoArrayList);
+//                productListAdapter.updateList(productInfoArrayList);
                 removeListener();
             }
 
@@ -122,10 +121,10 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
 
     private void removeListener() {
         FirebaseDatabase.getInstance().getReference().removeEventListener(firstValueListener);
+        getRatingArrayList();
     }
 
     private void setupEvent() {
-        getRatingArrayList();
     }
 
     @Override
@@ -220,13 +219,13 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
 
     private void putOverallRatingToDb(ProductInfo productInfo, int rating) {
 
-
         int finalOverallRating = 0;
-        if(Integer.parseInt(userRating) > rating){
+
+        if (Integer.parseInt(userRating) > rating) {
             int diff = Integer.parseInt(userRating) - rating;
             finalOverallRating = productInfo.overAllRating - diff;
-        }else{
-            int diff =  rating - Integer.parseInt(userRating) ;
+        } else {
+            int diff = rating - Integer.parseInt(userRating);
             finalOverallRating = productInfo.overAllRating + diff;
         }
 
@@ -234,7 +233,7 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
-                    productListAdapter.clearList();
+//                    productListAdapter.clearList();
                     getProductListFromPublicDataBase();
                     progressDialog.dismiss();
                 } else {
@@ -264,7 +263,7 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
                         public void onComplete(@NonNull Task<Void> task) {
                             if (task.isSuccessful())
                                 FirebaseDatabase.getInstance().getReference().removeEventListener(getRatingListener);
-                                getRatingFromTheDb(productInfo, isToGetRating, rating);
+                            getRatingFromTheDb(productInfo, isToGetRating, rating);
                         }
                     });
                 }
@@ -291,8 +290,10 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 try {
-                    if (!TextUtils.isNullOrEmpty("" + dataSnapshot.getValue()))
+                    if (!TextUtils.isNullOrEmpty("" + dataSnapshot.getValue())) {
                         userRating = "" + dataSnapshot.getValue();
+                        Log.e("Firebase","user_rating"+userRating);
+                    }
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
                 }
@@ -323,10 +324,10 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
                     String key = snapshot.getKey();
                     for (DataSnapshot innerSnapshot : snapshot.getChildren()) {
                         if (innerSnapshot.getKey().equals("userRating")) {
-                            for(DataSnapshot snapshot1 : innerSnapshot.getChildren())
-                            if (getApp().getFireBaseAuth().getCurrentUser().getUid().equals(snapshot1.getKey())) {
-                                ratingArrayList.add(new UserRating(key, Integer.parseInt("" + snapshot1.getValue())));
-                            }
+                            for (DataSnapshot snapshot1 : innerSnapshot.getChildren())
+                                if (getApp().getFireBaseAuth().getCurrentUser().getUid().equals(snapshot1.getKey())) {
+                                    ratingArrayList.add(new UserRating(key, Integer.parseInt("" + snapshot1.getValue())));
+                                }
                         }
                     }
                 }
@@ -343,6 +344,6 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
 
     private void removeRatingListener() {
         FirebaseDatabase.getInstance().getReference().removeEventListener(ratingListener);
-        productListAdapter.notifyDataSetChanged();
+        productListAdapter.updateList(productInfoArrayList,ratingArrayList);
     }
 }

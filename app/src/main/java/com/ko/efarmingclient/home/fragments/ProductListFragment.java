@@ -134,7 +134,7 @@ public class ProductListFragment extends Fragment implements OnProductInfoOpenLi
                         productInfoArrayList.add(productInfo);
                     }
                 }
-                productListAdapter.updateList(productInfoArrayList);
+//                productListAdapter.updateList(productInfoArrayList);
                 if (productInfoArrayList.size() > 0) {
                     fabFilter.setVisibility(View.VISIBLE);
                 } else {
@@ -251,7 +251,7 @@ public class ProductListFragment extends Fragment implements OnProductInfoOpenLi
                             productInfoArrayList.add(productInfo);
                     }
                 }
-                productListAdapter.updateList(productInfoArrayList);
+//                productListAdapter.updateList(productInfoArrayList);
             }
 
             @Override
