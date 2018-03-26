@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
@@ -43,7 +44,7 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
     private FloatingActionButton fabFilter;
     private String companyKey;
     private ProgressDialog progressDialog;
-    private String userRating = "0";
+    private int userRating = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,12 +116,12 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
         };
 
         FirebaseDatabase.getInstance()
-                .getReference().child(Constants.PRODUCT_INFO).addListenerForSingleValueEvent(firstValueListener);
+                .getReference().child(Constants.PRODUCT_INFO).addValueEventListener(firstValueListener);
 
     }
 
     private void removeListener() {
-        FirebaseDatabase.getInstance().getReference().removeEventListener(firstValueListener);
+//        FirebaseDatabase.getInstance().getReference().removeEventListener(firstValueListener);
         getRatingArrayList();
     }
 
@@ -143,7 +144,7 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
     }
 
     @Override
-    public void onSetRatingToProducts(int rating, ProductInfo productInfo) {
+    public void onSetRatingToProducts(final int rating, final ProductInfo productInfo) {
         progressDialog.setMessage("Updating rating...");
         progressDialog.show();
         getRatingFromTheDb(productInfo, false, rating);
@@ -181,13 +182,13 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
 
                     boolean isRated = false;
 
-                    if (!TextUtils.isNullOrEmpty(userRating))
+                    if (userRating != 0)
                         isRated = true;
 
                     if (!isRated) {
-                        callRatingNofPerson(productInfo.ratingNoOfPerson, productInfo, rating);
+                        callRatingNofPerson(productInfo.ratingNoOfPerson, productInfo, rating, isRated);
                     } else {
-                        putOverallRatingToDb(productInfo, rating);
+                        putOverallRatingToDb(productInfo, rating, isRated);
                     }
 
                 } else {
@@ -199,7 +200,7 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
 
     }
 
-    private void callRatingNofPerson(int ratingNoOfPerson, final ProductInfo productInfo, final int rating) {
+    private void callRatingNofPerson(int ratingNoOfPerson, final ProductInfo productInfo, final int rating, final boolean isRated) {
 
         int finalRatingNoOfPerson = ratingNoOfPerson + 1;
 
@@ -208,7 +209,7 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
             @Override
             public void onComplete(@NonNull Task<Void> task) {
                 if (task.isSuccessful()) {
-                    putOverallRatingToDb(productInfo, rating);
+                    putOverallRatingToDb(productInfo, rating, isRated);
                 } else {
                     progressDialog.dismiss();
                     Toast.makeText(ProductListActivity.this, "Error occurred while accessing into database,please try again", Toast.LENGTH_SHORT).show();
@@ -217,34 +218,57 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
         });
     }
 
-    private void putOverallRatingToDb(ProductInfo productInfo, int rating) {
+    private void putOverallRatingToDb(final ProductInfo productInfo, int rating, boolean isRated) {
+
+        Toast.makeText(this,"Overall rating "+productInfo.overAllRating,Toast.LENGTH_SHORT).show();
 
         int finalOverallRating = 0;
 
-        if (Integer.parseInt(userRating) > rating) {
-            int diff = Integer.parseInt(userRating) - rating;
+        if (!isRated) {
+            if (productInfo.overAllRating == 0) {
+                finalOverallRating = rating;
+            } else if (userRating > rating) {
+                int diff = userRating - rating;
+                finalOverallRating = productInfo.overAllRating - diff;
+            } else {
+                int diff = rating - userRating;
+                finalOverallRating = productInfo.overAllRating + diff;
+            }
+
+        } else if (userRating > rating) {
+            int diff = userRating - rating;
             finalOverallRating = productInfo.overAllRating - diff;
         } else {
-            int diff = rating - Integer.parseInt(userRating);
+            int diff = rating - userRating;
             finalOverallRating = productInfo.overAllRating + diff;
         }
 
-        FirebaseDatabase.getInstance().getReference().child(Constants.PRODUCT_INFO).child(productInfo.productID).child("overAllRating").setValue(finalOverallRating).addOnCompleteListener(new OnCompleteListener<Void>() {
+        final int finalOverallRating1 = finalOverallRating;
+
+        new Handler().postDelayed(new Runnable() {
             @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()) {
+            public void run() {
+                FirebaseDatabase.getInstance().getReference().child(Constants.PRODUCT_INFO).child(productInfo.productID).child("overAllRating").setValue(finalOverallRating1).addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
 //                    productListAdapter.clearList();
-                    getProductListFromPublicDataBase();
-                    progressDialog.dismiss();
-                } else {
-                    progressDialog.dismiss();
-                    Toast.makeText(ProductListActivity.this, "Error occurred while accessing into database,please try again", Toast.LENGTH_SHORT).show();
-                }
+//                            getProductListFromPublicDataBase();
+                            progressDialog.dismiss();
+                        } else {
+                            progressDialog.dismiss();
+                            Toast.makeText(ProductListActivity.this, "Error occurred while accessing into database,please try again", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
             }
-        });
+        },300);
+
     }
 
     ValueEventListener getRatingListener;
+    ArrayList<String> checkUidList = new ArrayList<>();
+
 
     private void getRatingFromTheDb(final ProductInfo productInfo, final boolean isToGetRating, final int rating) {
 
@@ -254,19 +278,37 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
         getRatingListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                checkUidList = new ArrayList<>();
                 if (dataSnapshot.hasChild("userRating")) {
-                    decideToSetRating(databaseReference, isToGetRating, rating, productInfo);
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        if (snapshot.getKey().equals("userRating")) {
+                            for (DataSnapshot innerSnapShot : snapshot.getChildren()) {
+                                checkUidList.add(innerSnapShot.getKey());
+                                if (innerSnapShot.getKey().equals(getApp().getFireBaseAuth().getUid())) {
+                                    decideToSetRating(databaseReference, isToGetRating, rating, productInfo);
+                                }
+                            }
+                        }
+                    }
+                    if (checkUidList != null) {
+                        if (!checkUidList.contains(getApp().getFireBaseAuth().getUid())) {
+                            databaseReference.child("userRating").child(getApp().getFireBaseAuth().getUid()).setValue(0).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    decideToSetRating(databaseReference, isToGetRating, rating, productInfo);
+                                }
+                            });
+                        }
+                    }
                 } else {
-                    FirebaseDatabase.getInstance()
-                            .getReference().child(Constants.PRODUCT_INFO).child(productInfo.productID).child("userRating").setValue("0").addOnCompleteListener(new OnCompleteListener<Void>() {
+                    databaseReference.child("userRating").child(getApp().getFireBaseAuth().getUid()).setValue(0).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful())
-                                FirebaseDatabase.getInstance().getReference().removeEventListener(getRatingListener);
-                            getRatingFromTheDb(productInfo, isToGetRating, rating);
+                            decideToSetRating(databaseReference, isToGetRating, rating, productInfo);
                         }
                     });
                 }
+
             }
 
             @Override
@@ -282,17 +324,20 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
 
     ValueEventListener setRatingListener;
 
-    private void decideToSetRating(DatabaseReference databaseReference, final boolean isToGetRating, final int rating, final ProductInfo productInfo) {
+    private void decideToSetRating(final DatabaseReference databaseReference, final boolean isToGetRating, final int rating, final ProductInfo productInfo) {
 
         FirebaseDatabase.getInstance().getReference().removeEventListener(getRatingListener);
+
+
+
 
         setRatingListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 try {
-                    if (!TextUtils.isNullOrEmpty("" + dataSnapshot.getValue())) {
-                        userRating = "" + dataSnapshot.getValue();
-                        Log.e("Firebase","user_rating"+userRating);
+                    if (dataSnapshot.getValue() != null) {
+                        userRating = dataSnapshot.getValue(Integer.class);
+                        Log.e("Firebase", "user_rating" + userRating);
                     }
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
@@ -308,7 +353,6 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
         };
 
         databaseReference.child("userRating").child(getApp().getFireBaseAuth().getCurrentUser().getUid()).addListenerForSingleValueEvent(setRatingListener);
-
     }
 
     ArrayList<UserRating> ratingArrayList = new ArrayList<>();
@@ -320,6 +364,7 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
         ratingListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                ratingArrayList = new ArrayList<>();
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     String key = snapshot.getKey();
                     for (DataSnapshot innerSnapshot : snapshot.getChildren()) {
@@ -339,11 +384,10 @@ public class ProductListActivity extends BaseActivity implements OnProductInfoOp
 
             }
         };
-        databaseReference.addListenerForSingleValueEvent(ratingListener);
+        databaseReference.addValueEventListener(ratingListener);
     }
 
     private void removeRatingListener() {
-        FirebaseDatabase.getInstance().getReference().removeEventListener(ratingListener);
-        productListAdapter.updateList(productInfoArrayList,ratingArrayList);
+        productListAdapter.updateList(productInfoArrayList, ratingArrayList);
     }
 }

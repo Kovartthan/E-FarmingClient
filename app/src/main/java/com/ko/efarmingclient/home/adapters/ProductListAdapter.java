@@ -1,14 +1,17 @@
 package com.ko.efarmingclient.home.adapters;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.ko.efarmingclient.R;
 import com.ko.efarmingclient.listener.OnProductInfoOpenListener;
@@ -26,6 +29,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
     private ArrayList<ProductInfo> productInfoArrayList;
     private OnProductInfoOpenListener onProductInfoOpenListener;
     private ArrayList<UserRating> ratingArrayList;
+    private boolean isRated = false;
 
     public void setOnProductInfoOpenListener(OnProductInfoOpenListener onProductInfoOpenListener) {
         this.onProductInfoOpenListener = onProductInfoOpenListener;
@@ -42,6 +46,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.layout_product_item, parent, false);
         return new ProductItemHolder(view);
     }
+
 
     @Override
     public void onBindViewHolder(final RecyclerView.ViewHolder holder, int position) {
@@ -63,10 +68,12 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         ((ProductItemHolder) holder).txtProductName.setText(TextUtils.capitalizeFirstLetter(productInfo.productName));
         ((ProductItemHolder) holder).txtProductPrice.setText("Rs " + productInfo.productPrice);
         ((ProductItemHolder) holder).txtProductQuantity.setText("Available units : " + productInfo.productQuantity);
-        for(UserRating userRating : ratingArrayList){
-            if(productInfo.productID.equals(userRating.productID)){
-                if(userRating.rating != 0)
-                ((ProductItemHolder) holder).ratingBar.setRating(userRating.rating);
+        if(ratingArrayList != null) {
+            for (UserRating userRating : ratingArrayList) {
+                if (productInfo.productID.equals(userRating.productID)) {
+                    if (userRating.rating != 0)
+                        ((ProductItemHolder) holder).ratingBar.setRating(userRating.rating);
+                }
             }
         }
 //        int userRating = onProductInfoOpenListener.onGetRatingFromFirebase(productInfo);
@@ -86,12 +93,29 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
                 onProductInfoOpenListener.callToUser(productInfo);
             }
         });
-        ((ProductItemHolder) holder).ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+
+        ((ProductItemHolder) holder).ratingBar.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onRatingChanged(RatingBar ratingBar, float v, boolean b) {
-                onProductInfoOpenListener.onSetRatingToProducts((int) ratingBar.getRating(), productInfo);
-            }
-        });
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_UP) {
+                    float touchPositionX = event.getX();
+                    float width = ((ProductItemHolder) holder).ratingBar.getWidth();
+                    float starsf = (touchPositionX / width) * 5.0f;
+                    int stars = (int)starsf + 1;
+                    ((ProductItemHolder) holder).ratingBar.setRating(stars);
+                    onProductInfoOpenListener.onSetRatingToProducts((int)    ((ProductItemHolder) holder).ratingBar.getRating(), productInfo);
+                    v.setPressed(false);
+                }
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    v.setPressed(true);
+                }
+
+                if (event.getAction() == MotionEvent.ACTION_CANCEL) {
+                    v.setPressed(false);
+                }
+                return true;
+            }});
+
     }
 
     @Override
@@ -99,7 +123,7 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         return productInfoArrayList.size();
     }
 
-    public void updateList(ArrayList<ProductInfo> productInfoArrayList,ArrayList<UserRating> ratingArrayList) {
+    public void updateList(ArrayList<ProductInfo> productInfoArrayList, ArrayList<UserRating> ratingArrayList) {
         this.productInfoArrayList = productInfoArrayList;
         this.ratingArrayList = ratingArrayList;
         notifyDataSetChanged();
@@ -134,53 +158,6 @@ public class ProductListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHo
         }
 
     }
-//
-//    ValueEventListener valueEventListener,setRatingListener;
-//
-//    private void getRatingFromTheDb(final ProductInfo productInfo, ProductItemHolder holder) {
-//
-//
-//        final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference().child(Constants.PRODUCT_INFO).child(productInfo.productID);
-//
-//        valueEventListener = new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                if (dataSnapshot.hasChild("userRating")) {
-//                    decideToSetRating(databaseReference,productInfo);
-//                } else {
-//
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//
-//            }
-//        };
-//
-//        databaseReference.addListenerForSingleValueEvent(valueEventListener);
-//
-//    }
-//
-//    private void decideToSetRating(DatabaseReference databaseReference,final ProductInfo productInfo) {
-//
-//        FirebaseDatabase.getInstance().getReference().removeEventListener(valueEventListener);
-//
-//        setRatingListener = new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                int userRating = Integer.parseInt("" + dataSnapshot.getValue());
-//
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//
-//            }
-//        };
-//
-//        databaseReference.child("userRating").child(getApp().getFireBaseAuth().getCurrentUser().getUid()).addListenerForSingleValueEvent(setRatingListener);
-//
-//    }
+
 
 }
