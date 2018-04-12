@@ -31,12 +31,16 @@ import android.widget.Toast;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.ko.efarmingclient.home.activities.HomeActivity;
 import com.ko.efarmingclient.R;
 import com.ko.efarmingclient.base.BaseActivity;
 import com.ko.efarmingclient.util.AlertUtils;
+import com.ko.efarmingclient.util.Constants;
 import com.ko.efarmingclient.util.DeviceUtils;
 import com.ko.efarmingclient.util.MarshMallowPermissionUtils;
+import com.ko.efarmingclient.util.SharedPrefUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -257,11 +261,21 @@ public class LoginActivity extends BaseActivity {
                         } else {
                             if (efProgressDialog != null)
                                 efProgressDialog.dismiss();
+                            updateFirebaseToken(task.getResult().getUser().getUid(),   FirebaseInstanceId.getInstance().getToken());
                             startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                             finish();
                             Toast.makeText(LoginActivity.this, "Logged in successfully", Toast.LENGTH_LONG).show();
                         }
                     }
                 });
+    }
+
+    private void updateFirebaseToken(String uid, String token) {
+        FirebaseDatabase.getInstance()
+                .getReference()
+                .child(Constants.USERS)
+                .child(uid)
+                .child(Constants.ARG_FIREBASE_TOKEN)
+                .setValue(token);
     }
 }

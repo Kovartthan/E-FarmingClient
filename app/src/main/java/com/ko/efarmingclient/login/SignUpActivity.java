@@ -94,7 +94,7 @@ public class SignUpActivity extends BaseActivity {
                 File f = TempManager.getTempPictureFile(this);
                 if (f != null) {
                     String path = f.getAbsolutePath();
-                    imagePathForFireBase = path;
+
 
                     CompressImage compressImage = new CompressImage(this);
                     path = compressImage.compressImage(path);
@@ -102,6 +102,7 @@ public class SignUpActivity extends BaseActivity {
 
                     imagPaths = new String[]{path};
                     File file = new File(imagPaths[0]);
+                    imagePathForFireBase = file.getAbsolutePath();
                     if (file.exists()) {
                         cameraUtils.startCrop(file.getAbsolutePath());
                     }

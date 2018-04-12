@@ -45,6 +45,7 @@ dependencies {
     implementation 'com.squareup.picasso:picasso:2.71828'
     compile "cz.msebera.android:httpclient:4.4.1.2"
     compile 'com.google.maps.android:android-maps-utils:0.5+'
+    compile 'org.greenrobot:eventbus:3.1.1'
 }
 
 apply plugin: 'com.google.gms.google-services'

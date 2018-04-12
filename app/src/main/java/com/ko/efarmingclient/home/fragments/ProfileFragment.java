@@ -91,6 +91,7 @@ public class ProfileFragment extends Fragment {
     private RadioGroup radioGroup;
     private boolean isResetPassword = false;
     private EFProgressDialog efProgressDialog;
+    private String email;
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -107,7 +108,7 @@ public class ProfileFragment extends Fragment {
                 File f = TempManager.getTempPictureFile(getActivity());
                 if (f != null) {
                     String path = f.getAbsolutePath();
-                    imagePathForFireBase = path;
+
 
                     CompressImage compressImage = new CompressImage(getActivity());
                     path = compressImage.compressImage(path);
@@ -115,6 +116,7 @@ public class ProfileFragment extends Fragment {
 
                     imagPaths = new String[]{path};
                     File file = new File(imagPaths[0]);
+                    imagePathForFireBase = file.getAbsolutePath();
                     if (file.exists()) {
                         cameraUtils.startCrop(file.getAbsolutePath());
                     }
@@ -585,13 +587,14 @@ public class ProfileFragment extends Fragment {
         public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
             FirebaseUser user = firebaseAuth.getCurrentUser();
             if (!isResetPassword && user == null) {
-                startActivity(new Intent(getActivity(), LoginActivity.class).putExtra("email",mEmailView.getText().toString()));
+                startActivity(new Intent(getActivity(), LoginActivity.class).putExtra("email",email));
                 getActivity().finish();
             }
         }
     };
 
     public void doLogout() {
+        email = mEmailView.getText().toString();
         getApp().getFireBaseAuth().signOut();
     }
 

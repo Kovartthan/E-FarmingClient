@@ -12,11 +12,14 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.ko.efarmingclient.fcm.FcmNotificationBuilder;
 import com.ko.efarmingclient.model.Chat;
 import com.ko.efarmingclient.model.NameInfo;
 import com.ko.efarmingclient.model.OnlineStatus;
 import com.ko.efarmingclient.model.ProductInfo;
 import com.ko.efarmingclient.util.Constants;
+import com.ko.efarmingclient.util.SharedPrefUtil;
 
 import static com.ko.efarmingclient.EFApp.getApp;
 import static com.ko.efarmingclient.util.Constants.ONLINE_STATUS;
@@ -76,11 +79,11 @@ public class ChatInteractor implements ChatContract.Interactor {
                 }
 
                 // send push notification to the receiver
-//                sendPushNotificationToReceiver(chat.sender,
-//                        chat.message,
-//                        chat.senderUid,
-//                        new SharedPrefUtil(context).getString(Constants.ARG_FIREBASE_TOKEN),
-//                        receiverFirebaseToken);
+                sendPushNotificationToReceiver(chat.sender,
+                        chat.message,
+                        chat.senderUid,
+                        FirebaseInstanceId.getInstance().getToken(),
+                        receiverFirebaseToken);
                 mOnSendMessageListener.onSendMessageSuccess();
             }
 
@@ -118,20 +121,20 @@ public class ChatInteractor implements ChatContract.Interactor {
     }
 
 
-//    private void sendPushNotificationToReceiver(String username,
-//                                                String message,
-//                                                String uid,
-//                                                String firebaseToken,
-//                                                String receiverFirebaseToken) {
-//        FcmNotificationBuilder.initialize()
-//                .title(username)
-//                .message(message)
-//                .username(username)
-//                .uid(uid)
-//                .firebaseToken(firebaseToken)
-//                .receiverFirebaseToken(receiverFirebaseToken)
-//                .send();
-//    }
+    private void sendPushNotificationToReceiver(String username,
+                                                String message,
+                                                String uid,
+                                                String firebaseToken,
+                                                String receiverFirebaseToken) {
+        FcmNotificationBuilder.initialize()
+                .title(username)
+                .message(message)
+                .username(username)
+                .uid(uid)
+                .firebaseToken(firebaseToken)
+                .receiverFirebaseToken(receiverFirebaseToken)
+                .send();
+    }
 
     @Override
     public void getMessageFromFirebaseUser(String senderUid, String receiverUid, String key) {
@@ -276,8 +279,8 @@ public class ChatInteractor implements ChatContract.Interactor {
     void getOnlineStatusForReceiver(final String receiverId){
         FirebaseDatabase.getInstance()
                 .getReference()
-                .child(Constants.USERS)
-                .child(receiverId).child(ONLINE_STATUS).addListenerForSingleValueEvent(new ValueEventListener() {
+                .child(Constants.ADMIN_USERS)
+                .child(receiverId).child(ONLINE_STATUS).addValueEventListener(new ValueEventListener() {
 
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

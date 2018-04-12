@@ -21,18 +21,28 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.ko.efarmingclient.R;
+import com.ko.efarmingclient.home.activities.ChatActivity;
 import com.ko.efarmingclient.home.activities.HomeActivity;
 import com.ko.efarmingclient.home.chat.ChatContract;
 import com.ko.efarmingclient.home.chat.ChatPresenter;
 import com.ko.efarmingclient.home.adapters.ChatRecyclerAdapter;
 import com.ko.efarmingclient.model.Chat;
 import com.ko.efarmingclient.model.ProductInfo;
+import com.ko.efarmingclient.model.PushNotificationEvent;
+import com.ko.efarmingclient.model.User;
 import com.ko.efarmingclient.util.Constants;
+import com.ko.efarmingclient.util.DateConversion;
 import com.ko.efarmingclient.util.DeviceUtils;
+import com.ko.efarmingclient.util.TextUtils;
+import com.squareup.picasso.Picasso;
 
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
 
@@ -110,11 +120,11 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
         mChatRecyclerAdapter = new ChatRecyclerAdapter(getActivity(),chatArrayList);
         mRecyclerViewChat.setAdapter(mChatRecyclerAdapter);
 
-        getOnlineStatus();
+
     }
 
     private void getOnlineStatus() {
-        mChatPresenter.getOnlineStatus(getApp().getFireBaseAuth().getCurrentUser().getUid());
+        mChatPresenter.getOnlineStatus(receiverUid);
     }
 
 
@@ -179,21 +189,23 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
 
     @Override
     public void onGetOnlineStatus(boolean isOnline, long timeStamp) {
-        if(isOnline) {
-//            txtOnlineStatus.setText("Online");
-        }
-        else{
-//            txtOnlineStatus.setText(DateConversion.converToTimeForRecentActivity(timeStamp));
+        if(isAdded() && getActivity() != null) {
+            if (isOnline) {
+                ((ChatActivity) getActivity()).txtRequestFor.setText("Online");
+            } else {
+                ((ChatActivity) getActivity()).txtRequestFor.setText(DateConversion.converToTimeForRecentActivity(timeStamp));
+            }
         }
     }
 
-//    @Subscribe
-//    public void onPushNotificationEvent(PushNotificationEvent pushNotificationEvent) {
-//        if (mChatRecyclerAdapter == null || mChatRecyclerAdapter.getItemCount() == 0) {
-//            mChatPresenter.getMessage(FirebaseAuth.getInstance().getCurrentUser().getUid(),
-//                    pushNotificationEvent.getUid());
-//        }
-//    }
+
+    @Subscribe
+    public void onPushNotificationEvent(PushNotificationEvent pushNotificationEvent) {
+        if (mChatRecyclerAdapter == null || mChatRecyclerAdapter.getItemCount() == 0) {
+            mChatPresenter.getMessage(FirebaseAuth.getInstance().getCurrentUser().getUid(),
+                    pushNotificationEvent.getUid(),null);
+        }
+    }
 
     public void getReceiverID() {
         FirebaseDatabase.getInstance()
@@ -207,6 +219,8 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
                         receiver = productInfo.user_info.email;
                         receiverFirebaseToken = productInfo.user_info.firebaseToken;
                     }
+                    getUserInfo(receiverUid);
+                    getOnlineStatus();
                     mChatPresenter.getMessage(FirebaseAuth.getInstance().getCurrentUser().getUid(), receiverUid, productId.productID);
                 }
 
@@ -219,25 +233,37 @@ public class ChatFragment extends Fragment implements ChatContract.View, TextVie
         });
     }
 
+    private void getUserInfo(String uid) {
+        DatabaseReference ref = getApp().getFireBaseDataBase().child(Constants.ADMIN_USERS).child(uid);
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                User user = dataSnapshot.getValue(User.class);
+                if(isAdded() && getActivity() != null && user != null) {
+                    if (!TextUtils.isNullOrEmpty(user.userImage)) {
+                        Picasso.get().load(user.userImage).placeholder(R.drawable.ic_account_circle_white_48dp).into(((ChatActivity) getActivity()).imgProfile);
+                    }
+                    ((ChatActivity) getActivity()).txtChatUserName.setText(user.email);
+                }
+            }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-//        if (getApp().getFireBaseAuth().getCurrentUser() != null)
-//            ((HomeActivity)getActivity()).setOnlineStatus(false);
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        if (getApp().getFireBaseAuth().getCurrentUser() != null) {
-//            ((HomeActivity)getActivity()).setOnlineStatus(false);
-        }
+    public void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
     }
-//    @Override
-//    public void onResume() {
-//        super.onResume();
-//        if(mChatRecyclerAdapter != null)
-//            mChatRecyclerAdapter.notifyDataSetChanged();
-//    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
+    }
+
 }

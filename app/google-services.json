@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "476454805088-a120pbeif4m42n6d43ieea7iqcosrm6m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ko.efarming",
+            "certificate_hash": "4f640a3f39b95ee3c35454fea04a036c806e1b71"
+          }
+        },
+        {
           "client_id": "476454805088-33vca0bpupp45m8juquh1ff0s9j0nbng.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -72,6 +80,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "476454805088-ma9p29v6q0ivhi940d87tiggjua6q8u8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ko.efarmingclient",
+            "certificate_hash": "4f640a3f39b95ee3c35454fea04a036c806e1b71"
+          }
+        },
         {
           "client_id": "476454805088-egvasajtu5hsng0c0qrsnhuivb29g0rt.apps.googleusercontent.com",
           "client_type": 1,

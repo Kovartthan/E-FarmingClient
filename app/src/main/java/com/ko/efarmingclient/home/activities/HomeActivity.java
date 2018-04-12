@@ -71,7 +71,6 @@ public class HomeActivity extends BaseActivity {
 
     private void setupDefaults() {
         setMapFragmentAtInit();
-        setOnlineStatus(true);
     }
 
     private void setMapFragmentAtInit(){
